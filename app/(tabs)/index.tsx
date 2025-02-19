@@ -1,25 +1,39 @@
-// app/index.tsx
-import React from 'react';
-import { View, Text, Button, StyleSheet } from 'react-native';
-import AOnBoarding from '../screen/AOnBoarding';
+import React from "react";
+import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import { Ionicons } from "@expo/vector-icons";
+import AOnBoarding from "../screen/AOnBoarding"; 
+import HomeScreen from "../screen/HomeScreen"; 
+import RegisterScreen from "../screen/RegisterScreen";
+import LoginScreen from "../screen/LoginScreen";
 
-export default function HomeScreen() {
+const Tab = createBottomTabNavigator();
+
+export default function App() {
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Welcome to Amazingym!</Text>
-      <Button title="Go to Explore" onPress={() => {AOnBoarding}} />
-    </View>
+    <Tab.Navigator
+      screenOptions={({ route }) => ({
+        tabBarIcon: ({ focused, color, size }) => {
+          let iconName;
+
+          if (route.name === "Home") {
+            iconName = focused ? "home" : "home";
+          } else if (route.name === "Profile") {
+            iconName = focused ? "person" : "person-outline";
+          } else if (route.name === "Star") {
+            iconName = focused ? "star" : "star-outline";
+          }else if (route.name === "Resources") {
+            iconName = focused ? "document" : "document-outline";
+          }
+
+          // You can return any component that you like here!
+          return <Ionicons name={iconName} size={size} color={color} />;
+        },
+      })}
+    >
+      <Tab.Screen name="Home" component={HomeScreen} />
+      <Tab.Screen name="Resources" component={RegisterScreen} />
+      <Tab.Screen name="Star" component={LoginScreen} />
+      <Tab.Screen name="Profile" component={AOnBoarding} />
+    </Tab.Navigator>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-  },
-});

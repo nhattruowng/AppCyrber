@@ -1,7 +1,6 @@
 import * as React from "react";
 import { Image, StyleSheet, Text, View } from "react-native";
-import { Color, FontFamily } from "../GlobalStyles";
-import Group from '../../assets/images/Group.png'
+import { Color, FontFamily } from "../GlobalStyles"; // Correct path
 
 const AOnBoarding = () => {
   return (
@@ -29,7 +28,6 @@ const styles = StyleSheet.create({
     position: "absolute",
   },
   fitbodyClr: {
-    color: Color.color1,
     left: "50%",
   },
   textFlexBox: {
@@ -57,7 +55,6 @@ const styles = StyleSheet.create({
     fontSize: 25,
     lineHeight: 28,
     fontWeight: "700",
-    fontFamily: FontFamily.leagueSpartanBold,
     textAlign: "left",
     position: "absolute",
   },
@@ -107,11 +104,9 @@ const styles = StyleSheet.create({
   },
   fit: {
     fontWeight: "800",
-    fontFamily: FontFamily.poppinsExtraBoldItalic,
     fontStyle: "italic",
   },
   body: {
-    fontFamily: FontFamily.poppinsItalic,
     fontStyle: "italic",
   },
   fitbodyTxt: {
@@ -124,7 +119,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
     width: 374,
     height: 81,
-    color: Color.color1,
     left: "50%",
   },
   aOnBoarding: {
