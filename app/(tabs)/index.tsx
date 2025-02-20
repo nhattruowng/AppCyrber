@@ -5,6 +5,7 @@ import AOnBoarding from "../screen/AOnBoarding";
 import HomeScreen from "../screen/HomeScreen"; 
 import RegisterScreen from "../screen/RegisterScreen";
 import LoginScreen from "../screen/LoginScreen";
+import Profile from "../screen/Profile";
 
 const Tab = createBottomTabNavigator();
 
@@ -33,7 +34,7 @@ export default function App() {
       <Tab.Screen name="Home" component={HomeScreen} />
       <Tab.Screen name="Resources" component={RegisterScreen} />
       <Tab.Screen name="Star" component={LoginScreen} />
-      <Tab.Screen name="Profile" component={AOnBoarding} />
+      <Tab.Screen name="Profile" component={Profile} />
     </Tab.Navigator>
   );
 }
