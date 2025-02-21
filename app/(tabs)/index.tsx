@@ -6,6 +6,7 @@ import HomeScreen from "../screen/HomeScreen";
 import RegisterScreen from "../screen/RegisterScreen";
 import LoginScreen from "../screen/LoginScreen";
 import Profile from "../screen/Profile";
+import Notification from "../screen/Notification";
 
 const Tab = createBottomTabNavigator();
 
@@ -24,6 +25,8 @@ export default function App() {
             iconName = focused ? "star" : "star-outline";
           }else if (route.name === "Resources") {
             iconName = focused ? "document" : "document-outline";
+          }else if (route.name === "Notification") {
+            iconName = focused ? "notifications" : "notifications-outline";
           }
 
           // You can return any component that you like here!
@@ -35,6 +38,7 @@ export default function App() {
       <Tab.Screen name="Resources" component={RegisterScreen} />
       <Tab.Screen name="Star" component={LoginScreen} />
       <Tab.Screen name="Profile" component={Profile} />
+      <Tab.Screen name="Notification" component={Notification} />
     </Tab.Navigator>
   );
 }
