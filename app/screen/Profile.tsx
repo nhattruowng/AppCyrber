@@ -1,5 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { StyleSheet, View, Text, TextInput, TouchableOpacity, Image, ScrollView } from "react-native";
+import {
+  StyleSheet,
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  ScrollView,
+} from "react-native";
 import { Ionicons } from "@expo/vector-icons"; // Sử dụng Ionicons cho các icon
 
 const Profile = () => {
@@ -22,8 +29,12 @@ const Profile = () => {
 
   // Hàm để tính tuổi từ ngày sinh
   const calculateAge = (birthdate) => {
-    const birthDateParts = birthdate.split('/');
-    const birthDate = new Date(birthDateParts[2], birthDateParts[1] - 1, birthDateParts[0]);
+    const birthDateParts = birthdate.split("/");
+    const birthDate = new Date(
+      birthDateParts[2],
+      birthDateParts[1] - 1,
+      birthDateParts[0]
+    );
     const today = new Date();
     const age = today.getFullYear() - birthDate.getFullYear();
     const month = today.getMonth() - birthDate.getMonth();
@@ -61,10 +72,6 @@ const Profile = () => {
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <View style={styles.profileHeader}>
           <Ionicons name="person-circle" size={125} color="#fff" />
-          {/* <Image
-            style={styles.profileImage}
-            source={{ uri: "https://via.placeholder.com/125" }} // Thay thế bằng ảnh thực tế
-          /> */}
           <Text style={styles.profileTitle}>My Profile</Text>
         </View>
 
@@ -87,110 +94,162 @@ const Profile = () => {
         </View>
 
         {/* Thông tin cá nhân */}
-        <View style={styles.infoContainer}>
-          <View style={styles.row}>
-            <Text style={styles.label}>Full name</Text>
-            {isEditingName ? (
-              <TextInput
-                style={styles.input}
-                value={name}
-                onChangeText={setName}
-              />
-            ) : (
-              <Text style={styles.infoText}>{name}</Text>
-            )}
-            <TouchableOpacity onPress={() => setIsEditingName(!isEditingName)} style={styles.editIcon}>
-              <Ionicons name="pencil" size={20} color="#007BFF" />
-            </TouchableOpacity>
-          </View>
 
-          <View style={styles.row}>
-            <Text style={styles.label}>Email</Text>
-            {isEditingEmail ? (
-              <TextInput
-                style={styles.input}
-                value={email}
-                onChangeText={setEmail}
-              />
-            ) : (
-              <Text style={styles.infoText}>{email}</Text>
-            )}
-            <TouchableOpacity onPress={() => setIsEditingEmail(!isEditingEmail)} style={styles.editIcon}>
-              <Ionicons name="pencil" size={20} color="#007BFF" />
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.row}>
-            <Text style={styles.label}>Phone</Text>
-            {isEditingPhone ? (
-              <TextInput
-                style={styles.input}
-                value={phone}
-                onChangeText={setPhone}
-              />
-            ) : (
-              <Text style={styles.infoText}>{phone}</Text>
-            )}
-            <TouchableOpacity onPress={() => setIsEditingPhone(!isEditingPhone)} style={styles.editIcon}>
-              <Ionicons name="pencil" size={20} color="#007BFF" />
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.row}>
-            <Text style={styles.label}>Date of birth</Text>
-            {isEditingBirthdate ? (
-              <TextInput
-                style={styles.input}
-                value={birthdate}
-                onChangeText={setBirthdate}
-              />
-            ) : (
-              <Text style={styles.infoText}>{birthdate}</Text>
-            )}
-            <TouchableOpacity onPress={() => setIsEditingBirthdate(!isEditingBirthdate)} style={styles.editIcon}>
-              <Ionicons name="pencil" size={20} color="#007BFF" />
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.row}>
-            <Text style={styles.label}>Weight</Text>
-            {isEditingWeight ? (
-              <TextInput
-                style={styles.input}
-                value={weight}
-                onChangeText={setWeight}
-              />
-            ) : (
-              <Text style={styles.infoText}>{weight}</Text>
-            )}
-            <TouchableOpacity onPress={() => setIsEditingWeight(!isEditingWeight)} style={styles.editIcon}>
-              <Ionicons name="pencil" size={20} color="#007BFF" />
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.row}>
-            <Text style={styles.label}>Height</Text>
-            {isEditingHeight ? (
-              <TextInput
-                style={styles.input}
-                value={height}
-                onChangeText={setHeight}
-              />
-            ) : (
-              <Text style={styles.infoText}>{height}</Text>
-            )}
-            <TouchableOpacity onPress={() => setIsEditingHeight(!isEditingHeight)} style={styles.editIcon}>
-              <Ionicons name="pencil" size={20} color="#007BFF" />
-            </TouchableOpacity>
-          </View>
+        <View style={styles.row}>
+          <Text style={styles.label}>Full name</Text>
+          {isEditingName ? (
+            <TextInput
+              style={styles.input}
+              value={name}
+              onChangeText={setName}
+            />
+          ) : (
+            <Text style={styles.infoText}>{name}</Text>
+          )}
+          <TouchableOpacity
+            onPress={() => {
+              if (isEditingName) handleSave();
+              setIsEditingName(!isEditingName);
+            }}
+            style={styles.editIcon}
+          >
+            <Ionicons
+              name={isEditingName ? "checkmark" : "pencil"}
+              size={20}
+              color="#007BFF"
+            />
+          </TouchableOpacity>
         </View>
 
-        {/* Chỉnh sửa hoặc lưu */}
-        {isEditingName || isEditingEmail || isEditingPhone || isEditingBirthdate || isEditingWeight || isEditingHeight ? (
-          <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-            <Text style={styles.buttonText}>Save</Text>
+        <View style={styles.row}>
+          <Text style={styles.label}>Email</Text>
+          {isEditingEmail ? (
+            <TextInput
+              style={styles.input}
+              value={email}
+              onChangeText={setEmail}
+            />
+          ) : (
+            <Text style={styles.infoText}>{email}</Text>
+          )}
+          <TouchableOpacity
+            onPress={() => {
+              if (isEditingEmail) handleSave();
+              setIsEditingEmail(!isEditingEmail);
+            }}
+            style={styles.editIcon}
+          >
+            <Ionicons
+              name={isEditingEmail ? "checkmark" : "pencil"}
+              size={20}
+              color="#007BFF"
+            />
           </TouchableOpacity>
-        ) : null}
+        </View>
+
+        <View style={styles.row}>
+          <Text style={styles.label}>Phone</Text>
+          {isEditingPhone ? (
+            <TextInput
+              style={styles.input}
+              value={phone}
+              onChangeText={setPhone}
+            />
+          ) : (
+            <Text style={styles.infoText}>{phone}</Text>
+          )}
+          <TouchableOpacity
+            onPress={() => {
+              if (isEditingPhone) handleSave();
+              setIsEditingPhone(!isEditingPhone);
+            }}
+            style={styles.editIcon}
+          >
+            <Ionicons
+              name={isEditingPhone ? "checkmark" : "pencil"}
+              size={20}
+              color="#007BFF"
+            />
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.row}>
+          <Text style={styles.label}>Date of birth</Text>
+          {isEditingBirthdate ? (
+            <TextInput
+              style={styles.input}
+              value={birthdate}
+              onChangeText={setBirthdate}
+            />
+          ) : (
+            <Text style={styles.infoText}>{birthdate}</Text>
+          )}
+          <TouchableOpacity
+            onPress={() => {
+              if (isEditingBirthdate) handleSave();
+              setIsEditingBirthdate(!isEditingBirthdate);
+            }}
+            style={styles.editIcon}
+          >
+            <Ionicons
+              name={isEditingBirthdate ? "checkmark" : "pencil"}
+              size={20}
+              color="#007BFF"
+            />
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.row}>
+          <Text style={styles.label}>Weight</Text>
+          {isEditingWeight ? (
+            <TextInput
+              style={styles.input}
+              value={weight}
+              onChangeText={setWeight}
+            />
+          ) : (
+            <Text style={styles.infoText}>{weight}</Text>
+          )}
+          <TouchableOpacity
+            onPress={() => {
+              if (isEditingWeight) handleSave();
+              setIsEditingWeight(!isEditingWeight);
+            }}
+            style={styles.editIcon}
+          >
+            <Ionicons
+              name={isEditingWeight ? "checkmark" : "pencil"}
+              size={20}
+              color="#007BFF"
+            />
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.row}>
+          <Text style={styles.label}>Height</Text>
+          {isEditingHeight ? (
+            <TextInput
+              style={styles.input}
+              value={height}
+              onChangeText={setHeight}
+            />
+          ) : (
+            <Text style={styles.infoText}>{height}</Text>
+          )}
+          <TouchableOpacity
+            onPress={() => {
+              if (isEditingHeight) handleSave();
+              setIsEditingHeight(!isEditingHeight);
+            }}
+            style={styles.editIcon}
+          >
+            <Ionicons
+              name={isEditingHeight ? "checkmark" : "pencil"}
+              size={20}
+              color="#007BFF"
+            />
+          </TouchableOpacity>
+        </View>
       </ScrollView>
 
       {/* Log Out Button */}

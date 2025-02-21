@@ -23,14 +23,21 @@ export default function App() {
             iconName = focused ? "person" : "person-outline";
           } else if (route.name === "Star") {
             iconName = focused ? "star" : "star-outline";
-          }else if (route.name === "Resources") {
+          } else if (route.name === "Resources") {
             iconName = focused ? "document" : "document-outline";
-          }else if (route.name === "Notification") {
+          } else if (route.name === "Notification") {
             iconName = focused ? "notifications" : "notifications-outline";
           }
 
-          // You can return any component that you like here!
           return <Ionicons name={iconName} size={size} color={color} />;
+        },
+        headerShown: false,  // Hide the header to reduce space
+        tabBarStyle: {
+          backgroundColor: '#212020', // Customize your tab bar background if needed
+          height: 60,  // Adjust tab bar height if needed
+        },
+        tabBarLabelStyle: {
+          fontSize: 14, // Adjust font size for the tab labels
         },
       })}
     >

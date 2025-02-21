@@ -35,8 +35,8 @@ const RegisterScreen = ({ navigation }) => {
         style={styles.inputField}
         placeholder="Tên người dùng"
         value={username}
-              onChangeText={setUsername}
-              placeholderTextColor="#A9A9A9"
+        onChangeText={setUsername}
+        placeholderTextColor="#A9A9A9"
       />
 
       {/* Email hoặc số điện thoại */}
@@ -45,8 +45,8 @@ const RegisterScreen = ({ navigation }) => {
         placeholder="Email hoặc số điện thoại"
         value={emailOrPhone}
         onChangeText={setEmailOrPhone}
-              keyboardType="email-address" // Hoặc phone-pad tùy vào yêu cầu
-              placeholderTextColor="#A9A9A9"
+        keyboardType="email-address" // Hoặc phone-pad tùy vào yêu cầu
+        placeholderTextColor="#A9A9A9"
       />
 
       {/* Mật khẩu */}
@@ -55,8 +55,8 @@ const RegisterScreen = ({ navigation }) => {
         placeholder="Mật khẩu"
         secureTextEntry
         value={password}
-              onChangeText={setPassword}
-              placeholderTextColor="#A9A9A9"
+        onChangeText={setPassword}
+        placeholderTextColor="#A9A9A9"
       />
 
       {/* Xác nhận mật khẩu */}
@@ -65,10 +65,11 @@ const RegisterScreen = ({ navigation }) => {
         placeholder="Xác nhận mật khẩu"
         secureTextEntry
         value={confirmPassword}
-              onChangeText={setConfirmPassword}
-              placeholderTextColor="#A9A9A9"
-          />
-          <Text style={styles.login}>Hoặc đăng nhập bằng</Text>
+        onChangeText={setConfirmPassword}
+        placeholderTextColor="#A9A9A9"
+      />
+      
+      <Text style={styles.login}>Hoặc đăng nhập bằng</Text>
 
       {/* Các icon */}
       <View style={styles.iconContainer}>
@@ -96,7 +97,7 @@ const RegisterScreen = ({ navigation }) => {
       <TouchableOpacity style={styles.registerButton} onPress={handleRegister}>
         <Text style={styles.registerText}>Đăng ký</Text>
         <View style={styles.gradientButtonInner} />
-                <View style={styles.rectangleView} />
+        <View style={styles.rectangleView} />
       </TouchableOpacity>
 
       {/* Link chuyển đến trang đăng nhập */}
@@ -108,99 +109,93 @@ const RegisterScreen = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: '#232323',
-      justifyContent: 'center',
-      alignItems: 'center',
-      position: 'relative',
-    },
-    loginTitle: {
-      position: 'absolute',
-      top: windowHeight * 0.05, // 5% chiều cao màn hình
-      fontSize: 24,
-      fontWeight: 'bold',
-      color: '#fff',
-    },
-    login: {
-        position: "absolute",
-        top: windowHeight * 0.445,
-        fontSize: 20,
-        fontWeight: "bold",
-        color: "#fff",
-      },
-    inputField: {
-      height: 45,
-      width: windowWidth * 0.8, // 80% chiều rộng màn hình
-      maxWidth: 350, // Giới hạn chiều rộng tối đa
-      maxHeight: 60, // Giới hạn chiều cao tối đa
-      backgroundColor: '#fff',
-      borderRadius: 15,
-      marginBottom: 15,
-      paddingHorizontal: 10,
-      fontSize: 16,
-      color: '#232323',
-    },
-    iconContainer: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      width: windowWidth * 0.5, // 50% chiều rộng màn hình
-      maxWidth: 300, // Giới hạn chiều rộng tối đa
-      marginTop: 30,
-      top: 10,
-    },
-    googleIcon: {
-      marginRight: 10,
-    },
-    fingerprintIcon: {
-      marginLeft: 10,
-    },
-    facebookIcon: {
-      marginLeft: 10,
-    },
-    registerButton: {
-      top: windowHeight * 0.511, // 50% chiều cao màn hình
-      height: 44,
-      width: 179,
-      position: "absolute",
-      shadowOpacity: 1,
-      elevation: 4,
-      shadowRadius: 4,
-      shadowOffset: { width: 0, height: 4 },
-      shadowColor: "rgba(0, 0, 0, 0.25)",
-      justifyContent: "center",
-      alignItems: "center",
-      marginTop: 30,
-      maxHeight: 60, // Giới hạn chiều cao tối đa cho button
-    },
-    gradientButtonInner: {
-        backgroundColor: "rgba(255, 255, 255, 0.09)",
-        height: 44,
-        width: 179,
-        borderRadius: 100,
-        position: "absolute",
-    },
-    rectangleView: {
-        borderWidth: 0.5,
-        borderColor: "#fff",
-        borderRadius: 100,
-        height: 44,
-        width: 179,
-        position: "absolute",
-      },
-    registerText: {
-      fontSize: 18,
-      fontFamily: 'Poppins-Bold',
-      fontWeight: '700',
-      textAlign: 'center',
-      color: '#fff',
-    },
-    link: {
-      marginTop: 12,
-      color: '#fff',
-      textAlign: 'center',
-      top: 80,
-    },
-  });
-  
-  export default RegisterScreen;
+  container: {
+    flex: 1,
+    backgroundColor: '#232323',
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'relative',
+    paddingHorizontal: 20,  // Thêm padding ngang cho màn hình nhỏ
+  },
+  loginTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginBottom: windowHeight * 0.05,  // Cách phần trên của màn hình
+  },
+  login: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginTop: 20,
+  },
+  inputField: {
+    height: 45,
+    width: windowWidth * 0.8, // 80% chiều rộng màn hình
+    maxWidth: 350, // Giới hạn chiều rộng tối đa
+    backgroundColor: '#fff',
+    borderRadius: 15,
+    marginBottom: 15,
+    paddingHorizontal: 10,
+    fontSize: 16,
+    color: '#232323',
+  },
+  iconContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: windowWidth * 0.6,  // Sử dụng tỷ lệ phần trăm thay vì giá trị cố định
+    marginTop: 30,
+  },
+  googleIcon: {
+    marginRight: 10,
+  },
+  fingerprintIcon: {
+    marginLeft: 10,
+  },
+  facebookIcon: {
+    marginLeft: 10,
+  },
+  registerButton: {
+    height: 44,
+    width: 179,
+    shadowOpacity: 1,
+    elevation: 4,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 4 },
+    shadowColor: "rgba(0, 0, 0, 0.25)",
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 30,
+    maxHeight: 60, // Giới hạn chiều cao tối đa cho button
+  },
+  gradientButtonInner: {
+    backgroundColor: "rgba(255, 255, 255, 0.09)",
+    height: 44,
+    width: 179,
+    borderRadius: 100,
+    position: "absolute",
+  },
+  rectangleView: {
+    borderWidth: 0.5,
+    borderColor: "#fff",
+    borderRadius: 100,
+    height: 44,
+    width: 179,
+    position: "absolute",
+  },
+  registerText: {
+    fontSize: 18,
+    fontFamily: 'Poppins-Bold',
+    fontWeight: '700',
+    textAlign: 'center',
+    color: '#fff',
+  },
+  link: {
+    marginTop: 12,
+    color: '#fff',
+    textAlign: 'center',
+    top: 80,
+  },
+});
+
+export default RegisterScreen;

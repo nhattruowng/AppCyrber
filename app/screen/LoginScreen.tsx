@@ -1,7 +1,6 @@
 import * as React from "react";
 import { StyleSheet, View, TextInput, TouchableOpacity, Text, Dimensions } from "react-native";
 import { Ionicons } from "@expo/vector-icons"; // Sử dụng Ionicons cho các icon
-import RegisterScreen from "./RegisterScreen";
 
 const windowHeight = Dimensions.get('window').height;
 const windowWidth = Dimensions.get('window').width;
@@ -60,8 +59,9 @@ const LoginScreen = () => {
         <Text style={styles.loginText}>Đăng nhập</Text>
       </TouchableOpacity>
 
-          <Text style={styles.link} onPress={() => RegisterScreen}>
-              Chưa có tài khoản? Đăng kí ngay</Text>
+      <Text style={styles.link} onPress={() => {/* logic to navigate to register screen */}}>
+        Chưa có tài khoản? Đăng kí ngay
+      </Text>
     </View>
   );
 };
@@ -72,34 +72,24 @@ const styles = StyleSheet.create({
     backgroundColor: "#232323",
     justifyContent: "center",
     alignItems: "center",
-    position: "relative", // Để phần Gradient không chặn các phần tử
+    paddingHorizontal: 20,  // Thêm padding ngang cho màn hình nhỏ
   },
   loginTitle: {
-    position: "absolute",
-    top: windowHeight * 0.1,
     fontSize: 24,
     fontWeight: "bold",
     color: "#fff",
+    marginBottom: windowHeight * 0.1,  // Cách phần trên của màn hình
   },
   login: {
-    position: "absolute",
-    top: windowHeight * 0.4,
     fontSize: 20,
     fontWeight: "bold",
     color: "#fff",
-  },
-  log: {
-    position: "absolute",
-    top: windowHeight * 0.6,
-    fontSize: 15,
-    fontWeight: "bold",
-    color: "#fff",
+    marginTop: 20,
   },
   inputField: {
     height: 45,
     width: windowWidth * 0.8, // 80% chiều rộng màn hình
     maxWidth: 350, // Giới hạn chiều rộng tối đa
-    maxHeight: 60, // Giới hạn chiều cao tối đa của trường nhập liệu
     backgroundColor: "#fff",
     borderRadius: 15,
     marginBottom: 15,
@@ -110,10 +100,8 @@ const styles = StyleSheet.create({
   iconContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
-    width: windowWidth * 0.5,
-    maxWidth: 300, // Giới hạn chiều rộng tối đa
+    width: windowWidth * 0.6,  // Sử dụng tỷ lệ phần trăm thay vì giá trị cố định
     marginTop: 30,
-    top: 40,
   },
   googleIcon: {
     marginRight: 10,
@@ -125,10 +113,8 @@ const styles = StyleSheet.create({
     marginLeft: 10,
   },
   loginButton: {
-    top: windowHeight * 0.5,
     height: 44,
     width: 179,
-    position: "absolute",
     shadowOpacity: 1,
     elevation: 4,
     shadowRadius: 4,
@@ -160,13 +146,13 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     textAlign: "center",
     color: "#fff",
-    },
-    link: {
-        marginTop: 12,
-        color: '#fff',
-        textAlign: 'center',
-        top: 140,
-      },
+  },
+  link: {
+    marginTop: 12,
+    color: '#fff',
+    textAlign: 'center',
+    top: 140,
+  },
 });
 
 export default LoginScreen;
