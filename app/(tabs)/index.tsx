@@ -1,12 +1,14 @@
 import React from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Ionicons } from "@expo/vector-icons";
-import AOnBoarding from "../screen/AOnBoarding"; 
-import HomeScreen from "../screen/HomeScreen"; 
+import AOnBoarding from "../screen/AOnBoarding";
+import HomeScreen from "../screen/HomeScreen";
 import RegisterScreen from "../screen/RegisterScreen";
 import LoginScreen from "../screen/LoginScreen";
 import Profile from "../screen/Profile";
 import Notification from "../screen/Notification";
+import TrainingSchedule from "../screen/TrainingSchedule";
+import Schedule from "../screen/Schedule.js";
 
 const Tab = createBottomTabNavigator();
 
@@ -31,17 +33,17 @@ export default function App() {
 
           return <Ionicons name={iconName} size={size} color={color} />;
         },
-        headerShown: false,  // Hide the header to reduce space
+        headerShown: false, // Hide the header to reduce space
         tabBarStyle: {
-          backgroundColor: '#212020', // Customize your tab bar background if needed
-          height: 60,  // Adjust tab bar height if needed
+          backgroundColor: "#212020", // Customize your tab bar background if needed
+          height: 60, // Adjust tab bar height if needed
         },
         tabBarLabelStyle: {
           fontSize: 14, // Adjust font size for the tab labels
         },
       })}
     >
-      <Tab.Screen name="Home" component={HomeScreen} />
+      <Tab.Screen name="Home" component={TrainingSchedule} />
       <Tab.Screen name="Resources" component={RegisterScreen} />
       <Tab.Screen name="Star" component={LoginScreen} />
       <Tab.Screen name="Profile" component={Profile} />
