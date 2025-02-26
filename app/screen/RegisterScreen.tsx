@@ -1,11 +1,24 @@
 import React, { useState } from 'react';
 import { StyleSheet, View, TextInput, TouchableOpacity, Text, Dimensions } from 'react-native';
-import { Ionicons } from '@expo/vector-icons'; // Sử dụng Ionicons cho các icon
+import { Ionicons } from '@expo/vector-icons';
+import { StackNavigationProp } from '@react-navigation/stack';
 
 const windowHeight = Dimensions.get('window').height;
 const windowWidth = Dimensions.get('window').width;
 
-const RegisterScreen = ({ navigation }) => {
+// Định nghĩa kiểu StackParamList nếu chưa có
+type RootStackParamList = {
+  Login: undefined;
+  Register: undefined;
+};
+
+type RegisterScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Register'>;
+
+interface RegisterScreenProps {
+  navigation: RegisterScreenNavigationProp;
+}
+
+const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
   const [username, setUsername] = useState('');
   const [emailOrPhone, setEmailOrPhone] = useState('');
   const [password, setPassword] = useState('');
@@ -17,7 +30,6 @@ const RegisterScreen = ({ navigation }) => {
       return;
     }
 
-    // Logic đăng ký ở đây
     console.log('Đăng ký với tên người dùng:', username);
     console.log('Email hoặc số điện thoại:', emailOrPhone);
 
@@ -26,11 +38,8 @@ const RegisterScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      
-      {/* Chữ "Trang đăng ký" */}
       <Text style={styles.loginTitle}>Trang Đăng Ký</Text>
 
-      {/* Tên người dùng */}
       <TextInput
         style={styles.inputField}
         placeholder="Tên người dùng"
@@ -39,17 +48,15 @@ const RegisterScreen = ({ navigation }) => {
         placeholderTextColor="#A9A9A9"
       />
 
-      {/* Email hoặc số điện thoại */}
       <TextInput
         style={styles.inputField}
         placeholder="Email hoặc số điện thoại"
         value={emailOrPhone}
         onChangeText={setEmailOrPhone}
-        keyboardType="email-address" // Hoặc phone-pad tùy vào yêu cầu
+        keyboardType="email-address"
         placeholderTextColor="#A9A9A9"
       />
 
-      {/* Mật khẩu */}
       <TextInput
         style={styles.inputField}
         placeholder="Mật khẩu"
@@ -59,7 +66,6 @@ const RegisterScreen = ({ navigation }) => {
         placeholderTextColor="#A9A9A9"
       />
 
-      {/* Xác nhận mật khẩu */}
       <TextInput
         style={styles.inputField}
         placeholder="Xác nhận mật khẩu"
@@ -71,36 +77,18 @@ const RegisterScreen = ({ navigation }) => {
       
       <Text style={styles.login}>Hoặc đăng nhập bằng</Text>
 
-      {/* Các icon */}
       <View style={styles.iconContainer}>
-        <Ionicons
-          name="logo-google"
-          style={styles.googleIcon}
-          size={34}
-          color="#DB4437"
-        />
-        <Ionicons
-          name="finger-print"
-          style={styles.fingerprintIcon}
-          size={34}
-          color="#000"
-        />
-        <Ionicons
-          name="logo-facebook"
-          style={styles.facebookIcon}
-          size={34}
-          color="#4267B2"
-        />
+        <Ionicons name="logo-google" style={styles.googleIcon} size={34} color="#DB4437" />
+        <Ionicons name="finger-print" style={styles.fingerprintIcon} size={34} color="#000" />
+        <Ionicons name="logo-facebook" style={styles.facebookIcon} size={34} color="#4267B2" />
       </View>
 
-      {/* Button Đăng ký */}
       <TouchableOpacity style={styles.registerButton} onPress={handleRegister}>
         <Text style={styles.registerText}>Đăng ký</Text>
         <View style={styles.gradientButtonInner} />
         <View style={styles.rectangleView} />
       </TouchableOpacity>
 
-      {/* Link chuyển đến trang đăng nhập */}
       <Text style={styles.link} onPress={() => navigation.navigate('Login')}>
         Đã có tài khoản? Đăng nhập
       </Text>
@@ -108,6 +96,7 @@ const RegisterScreen = ({ navigation }) => {
   );
 };
 
+// Style giữ nguyên
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -115,13 +104,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     position: 'relative',
-    paddingHorizontal: 20,  // Thêm padding ngang cho màn hình nhỏ
+    paddingHorizontal: 20,
   },
   loginTitle: {
     fontSize: 24,
     fontWeight: 'bold',
     color: '#fff',
-    marginBottom: windowHeight * 0.05,  // Cách phần trên của màn hình
+    marginBottom: windowHeight * 0.05,
   },
   login: {
     fontSize: 20,
@@ -131,8 +120,8 @@ const styles = StyleSheet.create({
   },
   inputField: {
     height: 45,
-    width: windowWidth * 0.8, // 80% chiều rộng màn hình
-    maxWidth: 350, // Giới hạn chiều rộng tối đa
+    width: windowWidth * 0.8,
+    maxWidth: 350,
     backgroundColor: '#fff',
     borderRadius: 15,
     marginBottom: 15,
@@ -143,7 +132,7 @@ const styles = StyleSheet.create({
   iconContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    width: windowWidth * 0.6,  // Sử dụng tỷ lệ phần trăm thay vì giá trị cố định
+    width: windowWidth * 0.6,
     marginTop: 30,
   },
   googleIcon: {
@@ -166,7 +155,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     marginTop: 30,
-    maxHeight: 60, // Giới hạn chiều cao tối đa cho button
+    maxHeight: 60,
   },
   gradientButtonInner: {
     backgroundColor: "rgba(255, 255, 255, 0.09)",

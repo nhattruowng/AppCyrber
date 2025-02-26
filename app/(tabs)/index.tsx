@@ -1,7 +1,6 @@
 import React from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Ionicons } from "@expo/vector-icons";
-import AOnBoarding from "../screen/AOnBoarding";
 import HomeScreen from "../screen/HomeScreen";
 import RegisterScreen from "../screen/RegisterScreen";
 import LoginScreen from "../screen/LoginScreen";
@@ -21,29 +20,37 @@ export default function App() {
     <Tab.Navigator
       screenOptions={({ route }) => ({
         tabBarIcon: ({ focused, color, size }) => {
-          let iconName;
+          let iconName: keyof typeof Ionicons.glyphMap;
 
-          if (route.name === "Home") {
-            iconName = focused ? "home" : "home";
-          } else if (route.name === "Profile") {
-            iconName = focused ? "person" : "person-outline";
-          } else if (route.name === "Star") {
-            iconName = focused ? "star" : "star-outline";
-          } else if (route.name === "Resources") {
-            iconName = focused ? "document" : "document-outline";
-          } else if (route.name === "Notification") {
-            iconName = focused ? "notifications" : "notifications-outline";
+          switch (route.name) {
+            case "Home":
+              iconName = focused ? "home" : "home";
+              break;
+            case "Profile":
+              iconName = focused ? "person" : "person-outline";
+              break;
+            case "Star":
+              iconName = focused ? "star" : "star-outline";
+              break;
+            case "Resources":
+              iconName = focused ? "document" : "document-outline";
+              break;
+            case "Notification":
+              iconName = focused ? "notifications" : "notifications-outline";
+              break;
+            default:
+              iconName = "help-circle"; // Fallback icon to avoid TypeScript error
           }
 
           return <Ionicons name={iconName} size={size} color={color} />;
         },
-        headerShown: false, // Hide the header to reduce space
+        headerShown: false,
         tabBarStyle: {
-          backgroundColor: "#212020", // Customize your tab bar background if needed
-          height: 60, // Adjust tab bar height if needed
+          backgroundColor: "#212020",
+          height: 60,
         },
         tabBarLabelStyle: {
-          fontSize: 14, // Adjust font size for the tab labels
+          fontSize: 14,
         },
       })}
     >

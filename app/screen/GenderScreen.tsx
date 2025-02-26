@@ -7,6 +7,7 @@ const GenderSelectionScreen: React.FC = () => {
     const [selectedGender, setSelectedGender] = useState<'male' | 'female' | null>(null);
 
     return (
+        
         <View style={styles.container}>
             <Text style={styles.title}>Giới tính của bạn?</Text>
             

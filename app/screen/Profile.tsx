@@ -27,22 +27,25 @@ const Profile = () => {
   const [isEditingWeight, setIsEditingWeight] = useState(false);
   const [isEditingHeight, setIsEditingHeight] = useState(false);
 
-  // Hàm để tính tuổi từ ngày sinh
-  const calculateAge = (birthdate) => {
-    const birthDateParts = birthdate.split("/");
-    const birthDate = new Date(
-      birthDateParts[2],
-      birthDateParts[1] - 1,
-      birthDateParts[0]
-    );
-    const today = new Date();
-    const age = today.getFullYear() - birthDate.getFullYear();
-    const month = today.getMonth() - birthDate.getMonth();
-    if (month < 0 || (month === 0 && today.getDate() < birthDate.getDate())) {
-      return age - 1;
-    }
-    return age;
-  };
+// Hàm để tính tuổi từ ngày sinh
+const calculateAge = (birthdate: string): number => {
+  const birthDateParts = birthdate.split("/");
+  const birthDate = new Date(
+    Number(birthDateParts[2]), // Năm
+    Number(birthDateParts[1]) - 1, // Tháng (JS Date bắt đầu từ 0)
+    Number(birthDateParts[0]) // Ngày
+  );
+  const today = new Date();
+  let age = today.getFullYear() - birthDate.getFullYear();
+  const month = today.getMonth() - birthDate.getMonth();
+
+  if (month < 0 || (month === 0 && today.getDate() < birthDate.getDate())) {
+    age -= 1;
+  }
+
+  return age;
+};
+
 
   useEffect(() => {
     const calculatedAge = calculateAge(birthdate);
