@@ -9,6 +9,10 @@ import Profile from "../screen/Profile";
 import Notification from "../screen/Notification";
 import TrainingSchedule from "../screen/TrainingSchedule";
 import Schedule from "../screen/Schedule.js";
+import GenderScreen from "../screen/GenderScreen";
+import AgeSelectionScreen from "../screen/AgeSelectionScreen";
+import WeightSelectionScreen from "../screen/WeightSelectionScreen";
+import HeightSelectionScreen from "../screen/HeightSelectionScreen";
 
 const Tab = createBottomTabNavigator();
 
@@ -43,11 +47,11 @@ export default function App() {
         },
       })}
     >
-      <Tab.Screen name="Home" component={TrainingSchedule} />
-      <Tab.Screen name="Resources" component={RegisterScreen} />
-      <Tab.Screen name="Star" component={LoginScreen} />
+      <Tab.Screen name="Home" component={GenderScreen} />
+      <Tab.Screen name="Resources" component={AgeSelectionScreen} />
+      <Tab.Screen name="Star" component={WeightSelectionScreen} />
+      <Tab.Screen name="Notification" component={HeightSelectionScreen} />
       <Tab.Screen name="Profile" component={Profile} />
-      <Tab.Screen name="Notification" component={Notification} />
     </Tab.Navigator>
   );
 }
