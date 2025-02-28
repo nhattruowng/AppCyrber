@@ -5,60 +5,69 @@ import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth';
 import {GoogleSignin} from '@react-native-google-signin/google-signin';
 import {useRouter} from "expo-router";
 
-export default function LoginScreen() {
+const LoginScreen = () => {
 
     const router = useRouter();
     const regis = () => {
         router.push("/authen/register");
     };
-    useEffect(() => {
-        GoogleSignin.configure({
-            webClientId: '1062171005115-9ds8cailu4f4lgmrb9q9f6ub3je13474.apps.googleusercontent.com',
-        });
-    }, [])
 
+    useEffect(() => {
+        try {
+            GoogleSignin.configure({
+                webClientId: '1062171005115-9ds8cailu4f4lgmrb9q9f6ub3je13474.apps.googleusercontent.com',
+                offlineAccess: true,
+            });
+        } catch (error) {
+            console.error("Lỗi cấu hình Google SignIn:", error);
+        }
+    }, []);
+
+    //
     const [user, setUser] = useState<FirebaseAuthTypes.User | null>(null);
     const [token, setToken] = useState<string | null>(null);
     const [initializing, setInitializing] = useState(true);
 
-    // useEffect(() => {
-    //     const subscriber = auth().onAuthStateChanged((user) => {
-    //         setUser(user);
-    //         if (initializing) setInitializing(false);
-    //     });
-    //     return subscriber;
-    // }, []);
-
     useEffect(() => {
         if (token) {
             const fetchData = async () => {
-                const data = await firebaseLogin();
-                console.log("Firebase Login Response:", data);
+                try {
+                    const data = await firebaseLogin();
+                    console.log("Firebase Login Response:", data);
+                } catch (error) {
+                    console.error("Lỗi khi gọi API:", error);
+                }
             };
             fetchData();
         }
     }, [token]);
 
+
+
     const signIn = async () => {
         try {
             await GoogleSignin.signOut();
             await GoogleSignin.hasPlayServices({showPlayServicesUpdateDialog: true});
-
             const signInResult = await GoogleSignin.signIn();
-            const idToken = signInResult.data?.idToken;
-            if (!idToken) throw new Error("Không tìm thấy ID token");
+
+            console.log("Google Sign-In Result:", signInResult); // ✅ Log kết quả để kiểm tra
+
+            const idToken = signInResult.data?.idToken; // ✅ Đúng cú pháp
+            if (!idToken) {
+                throw new Error("Không tìm thấy ID token. Vui lòng kiểm tra lại Google Sign-In API.");
+            }
 
             const googleCredential = auth.GoogleAuthProvider.credential(idToken);
             const userCredential = await auth().signInWithCredential(googleCredential);
 
             setUser(userCredential.user);
             setToken(idToken);
-
-            console.log("Token:", idToken);
         } catch (error) {
             console.error("Lỗi đăng nhập Google:", error);
         }
     };
+
+
 
     const firebaseLogin = async () => {
         try {
@@ -86,7 +95,7 @@ export default function LoginScreen() {
 
 
 
-    if (initializing) return null;
+    // if (initializing) return null;
 
     return (
         <View style={styles.container}>
@@ -112,14 +121,18 @@ export default function LoginScreen() {
 
             <Text style={styles.alternativeText}>Hoặc đăng nhập bằng</Text>
 
-            <TouchableOpacity style={styles.googleButton} onPress={signIn}>
+            <TouchableOpacity style={styles.googleButton}
+                              onPress={signIn}
+            >
                 <Ionicons name="logo-google" size={24} color="white" style={styles.googleIcon}/>
                 <Text style={styles.buttonText}>Đăng nhập với Google</Text>
             </TouchableOpacity>
 
             <View style={styles.bottomText}>
                 <Text style={{color: "#fff", fontSize: 14}}>Chưa có tài khoản?</Text>
-                <TouchableOpacity onPress={regis}>
+                <TouchableOpacity
+                    onPress={regis}
+                >
                     <Text style={styles.link}>Đăng ký ngay</Text>
                 </TouchableOpacity>
             </View>
@@ -212,3 +225,4 @@ const styles = StyleSheet.create({
         fontWeight: "bold",
     },
 });
+export default LoginScreen;

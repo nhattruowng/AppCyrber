@@ -11,6 +11,7 @@ import {useColorScheme} from '@/hooks/useColorScheme';
 
 import {Provider} from 'react-redux'
 import {store} from './redux/store'
+import LoginScreen from "@/app/authen/login";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -32,6 +33,7 @@ export default function RootLayout() {
     }
 
     return (
+        // <LoginScreen />
         <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
             <Provider store={store}>
                 <Stack>

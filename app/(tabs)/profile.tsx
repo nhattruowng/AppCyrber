@@ -54,7 +54,6 @@ export default function ProfileScreen() {
                         <Ionicons name="person-circle" size={125} color="#fff"/>
                         <Text style={styles.profileTitle}>My Profile</Text>
                     </View>
-                    {/* Thông tin cá nhân */}
                     <View style={styles.infoContainer}>
                         <View style={styles.row}>
                             <Text style={styles.label}>Full name</Text>
