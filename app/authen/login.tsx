@@ -5,6 +5,11 @@ import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth';
 import {GoogleSignin} from '@react-native-google-signin/google-signin';
 import {useRouter} from "expo-router";
 
+GoogleSignin.configure({
+    webClientId: '1062171005115-9ds8cailu4f4lgmrb9q9f6ub3je13474.apps.googleusercontent.com',
+    offlineAccess: true,
+});
+
 const LoginScreen = () => {
 
     const router = useRouter();
@@ -12,88 +17,88 @@ const LoginScreen = () => {
         router.push("/authen/register");
     };
 
-    useEffect(() => {
-        try {
-            GoogleSignin.configure({
-                webClientId: '1062171005115-9ds8cailu4f4lgmrb9q9f6ub3je13474.apps.googleusercontent.com',
-                offlineAccess: true,
-            });
-        } catch (error) {
-            console.error("Lỗi cấu hình Google SignIn:", error);
-        }
-    }, []);
-
     //
     const [user, setUser] = useState<FirebaseAuthTypes.User | null>(null);
     const [token, setToken] = useState<string | null>(null);
     const [initializing, setInitializing] = useState(true);
 
-    useEffect(() => {
-        if (token) {
-            const fetchData = async () => {
-                try {
-                    const data = await firebaseLogin();
-                    console.log("Firebase Login Response:", data);
-                } catch (error) {
-                    console.error("Lỗi khi gọi API:", error);
-                }
-            };
-            fetchData();
-        }
-    }, [token]);
-
+    // useEffect(() => {
+    //     if (token) {
+    //         const fetchData = async () => {
+    //             try {
+    //                 const data = await firebaseLogin();
+    //                 console.log("Firebase Login Response:", data);
+    //             } catch (error) {
+    //                 console.error("Lỗi khi gọi API:", error);
+    //             }
+    //         };
+    //         fetchData();
+    //     }
+    // }, [token]);
 
 
     const signIn = async () => {
-        try {
-            await GoogleSignin.signOut();
-            await GoogleSignin.hasPlayServices({showPlayServicesUpdateDialog: true});
-            const signInResult = await GoogleSignin.signIn();
+        // Check if your device supports Google Play
+        await GoogleSignin.signOut();
+        await GoogleSignin.hasPlayServices({showPlayServicesUpdateDialog: true});
+        // Get the users ID token
+        const signInResult = await GoogleSignin.signIn();
 
-            console.log("Google Sign-In Result:", signInResult); // ✅ Log kết quả để kiểm tra
-
-            const idToken = signInResult.data?.idToken; // ✅ Đúng cú pháp
-            if (!idToken) {
-                throw new Error("Không tìm thấy ID token. Vui lòng kiểm tra lại Google Sign-In API.");
-            }
-
-            const googleCredential = auth.GoogleAuthProvider.credential(idToken);
-            const userCredential = await auth().signInWithCredential(googleCredential);
-
-            setUser(userCredential.user);
-            setToken(idToken);
-        } catch (error) {
-            console.error("Lỗi đăng nhập Google:", error);
+        let idToken = signInResult.data?.idToken;
+        if (!idToken) {
+            idToken = signInResult.data?.idToken;
         }
+        if (!idToken) {
+            throw new Error('No ID token found');
+        }
+        // console.log(idToken)
+        // const loginResponse = await firebaseLogin(idToken);
+
+
+        // const response = await fetch("https://gymbe-production-233d.up.railway.app/api/authen/firebase-login", {
+        //     method: "POST",
+        //     headers: {
+        //         "Content-Type": "application/json",
+        //     },
+        //     body: JSON.stringify({token: idToken}),
+        // });
+        // const response = await fetch("http://localhost:8080/api/authen/firebase-login", {
+        //     method: "POST",
+        //     headers: {
+        //         "Content-Type": "application/json",
+        //     },
+        //     body: JSON.stringify({token: idToken}),
+        // });
+        // const data = await response.json();
+
+        console.log(idToken)
+        // console.log(response)
+
+        ///
+        return null;
     };
 
 
-
-    const firebaseLogin = async () => {
+    const firebaseLogin = async (idToken: string) => {
         try {
             const response = await fetch("https://gymbe-production-233d.up.railway.app/api/authen/firebase-login", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify({ token }),
+                body: JSON.stringify({token: idToken}),
             });
 
             if (!response.ok) {
                 throw new Error("Đăng nhập thất bại");
             }
-
             const data = await response.json();
-            console.log("Login Success:", data);
             return data;
         } catch (error) {
-            console.error("Error:", error);
+            console.error("Lỗi khi đăng nhập:", error);
             return null;
         }
     };
-
-
-
 
     // if (initializing) return null;
 
@@ -122,7 +127,7 @@ const LoginScreen = () => {
             <Text style={styles.alternativeText}>Hoặc đăng nhập bằng</Text>
 
             <TouchableOpacity style={styles.googleButton}
-                              onPress={signIn}
+                              onPress={() => signIn()}
             >
                 <Ionicons name="logo-google" size={24} color="white" style={styles.googleIcon}/>
                 <Text style={styles.buttonText}>Đăng nhập với Google</Text>
