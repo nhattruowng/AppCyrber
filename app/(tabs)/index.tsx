@@ -2,8 +2,8 @@ import React from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Ionicons } from "@expo/vector-icons";
 import HomeScreen from "../screen/HomeScreen";
-import RegisterScreen from "../screen/RegisterScreen";
-import LoginScreen from "../screen/LoginScreen";
+import RegisterScreen from "../screen/login/RegisterScreen";
+import LoginScreen from "../screen/login/LoginScreen";
 import Profile from "../screen/Profile";
 import Notification from "../screen/Notification";
 import TrainingSchedule from "../screen/TrainingSchedule";
@@ -12,6 +12,8 @@ import GenderScreen from "../screen/GenderScreen";
 import AgeSelectionScreen from "../screen/AgeSelectionScreen";
 import WeightSelectionScreen from "../screen/WeightSelectionScreen";
 import HeightSelectionScreen from "../screen/HeightSelectionScreen";
+import ForgetPasswordScreen from "../screen/login/ForgetPassword";
+import ResetPasswordScreen from "../screen/login/ResetPassword";
 
 const Tab = createBottomTabNavigator();
 
@@ -54,10 +56,10 @@ export default function App() {
         },
       })}
     >
-      <Tab.Screen name="Home" component={GenderScreen} />
-      <Tab.Screen name="Resources" component={AgeSelectionScreen} />
-      <Tab.Screen name="Star" component={WeightSelectionScreen} />
-      <Tab.Screen name="Notification" component={HeightSelectionScreen} />
+      <Tab.Screen name="Home" component={ForgetPasswordScreen} />
+      <Tab.Screen name="Resources" component={ResetPasswordScreen} />
+      <Tab.Screen name="Star" component={LoginScreen} />
+      <Tab.Screen name="Notification" component={RegisterScreen} />
       <Tab.Screen name="Profile" component={Profile} />
     </Tab.Navigator>
   );
