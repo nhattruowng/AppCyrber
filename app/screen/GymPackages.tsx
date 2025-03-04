@@ -4,14 +4,21 @@ import { StyleSheet, View, Text, FlatList, Dimensions, TouchableOpacity } from "
 const windowHeight = Dimensions.get("window").height;
 const windowWidth = Dimensions.get("window").width;
 
-const gymPackages = [
+interface GymPackage {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+}
+
+const gymPackages: GymPackage[] = [
   { id: "1", name: "Gói Cơ Bản", description: "Truy cập phòng tập trong giờ hành chính", price: 500000 },
   { id: "2", name: "Gói Tiêu Chuẩn", description: "Truy cập 24/7 + Hướng dẫn cơ bản", price: 800000 },
   { id: "3", name: "Gói Cao Cấp", description: "Truy cập 24/7 + PT riêng + Sauna", price: 1500000 },
 ];
 
 const GymPackagesScreen = () => {
-  const renderItem = ({ item }) => (
+  const renderItem = ({ item }: { item: GymPackage }) => (
     <View style={styles.packageCard}>
       <Text style={styles.packageName}>{item.name}</Text>
       <Text style={styles.packageDescription}>{item.description}</Text>
