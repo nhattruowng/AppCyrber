@@ -1,4 +1,5 @@
 import {createSlice, PayloadAction} from "@reduxjs/toolkit";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 interface UserState {
     id: string;
@@ -24,9 +25,13 @@ const userSlice = createSlice({
     initialState,
     reducers: {
         setUser: (state, action: PayloadAction<UserState>) => {
-            return {...state, ...action.payload};
+            const user = action.payload;
+            Object.assign(state, user);
+            AsyncStorage.setItem("user", JSON.stringify(user)).catch((err) =>
+                console.error("Lưu user thất bại:", err)
+            );
         },
-        clearUser: (state) =>{
+        clearUser: (state) => {
             state.token = "";
             state.phone = "";
             state.avata = null;

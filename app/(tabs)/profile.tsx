@@ -69,7 +69,7 @@ export default function ProfileScreen() {
                 </ScrollView>
             ) : null}
 
-            <TouchableOpacity style={styles.logoutButton} onPress={user?.token ? logout : () => router.push("/authen/login")}>
+            <TouchableOpacity style={styles.logoutButton} onPress={user.token ? logout : () => router.push("/authen/login")}>
                 <Text style={styles.logoutButtonText}>{user?.token ? "Đăng xuất" : "Đăng nhập"}</Text>
             </TouchableOpacity>
         </View>
