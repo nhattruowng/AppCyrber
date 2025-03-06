@@ -26,7 +26,11 @@ const userSlice = createSlice({
         setUser: (state, action: PayloadAction<UserState>) => {
             return {...state, ...action.payload};
         },
-        clearUser: () => initialState,
+        clearUser: (state) =>{
+            state.token = "";
+            state.phone = "";
+            state.avata = null;
+        }
     },
 });
 

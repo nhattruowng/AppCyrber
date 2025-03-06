@@ -1,9 +1,13 @@
 import {StyleSheet, TouchableOpacity, View, Text, TextInput, Dimensions} from 'react-native';
 import React, {useEffect, useState} from 'react';
 import {Ionicons} from "@expo/vector-icons";
-import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth';
+import {setUser} from '../redux/userSlice'
 import {GoogleSignin} from '@react-native-google-signin/google-signin';
 import {useRouter} from "expo-router";
+import {useDispatch, useSelector} from "react-redux";
+import {RootState} from "@/app/redux/store";
+import { useNavigation } from "@react-navigation/native";
+
 
 GoogleSignin.configure({
     webClientId: '1062171005115-9ds8cailu4f4lgmrb9q9f6ub3je13474.apps.googleusercontent.com',
@@ -11,16 +15,51 @@ GoogleSignin.configure({
 });
 
 const LoginScreen = () => {
-
+    const user = useSelector((state: RootState) => state.user);
     const router = useRouter();
+    const navigation = useNavigation();
+
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [token, setToken] = useState<string | null>(null);
+    const dispatch = useDispatch();
+    const [initializing, setInitializing] = useState(true);
+    const [isLoading, setIsLoading] = useState(false);
     const regis = () => {
         router.push("/authen/register");
     };
 
-    //
-    const [user, setUser] = useState<FirebaseAuthTypes.User | null>(null);
-    const [token, setToken] = useState<string | null>(null);
-    const [initializing, setInitializing] = useState(true);
+    const handleLogin = async () => {
+        try {
+            const response = await fetch('https://gymbe-production-233d.up.railway.app/api/authen/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({email, password}),
+            });
+            if (!response.ok) {
+                throw new Error('Đăng nhập thất bại');
+            }
+            const data = await response.json();
+            dispatch(
+                setUser({
+                    id: data.data.id,
+                    name: data.data.name,
+                    email: data.data.email,
+                    phone: data.data.phone || "",
+                    avata: data.data.avata instanceof ArrayBuffer ? new Uint8Array(data.data.avata) : null,
+                    token: data.data.token,
+                })
+            );
+//            if (user.token != ""){
+//                router.push("/")
+//            }
+            console.log('Đăng nhập thành công!');
+        } catch (error) {
+            console.error('Lỗi khi đăng nhập:', error);
+        }
+    };
 
     // useEffect(() => {
     //     if (token) {
@@ -51,7 +90,7 @@ const LoginScreen = () => {
         if (!idToken) {
             throw new Error('No ID token found');
         }
-        // console.log(idToken)
+        console.log(idToken)
         // const loginResponse = await firebaseLogin(idToken);
 
 
@@ -103,6 +142,7 @@ const LoginScreen = () => {
     // if (initializing) return null;
 
     return (
+
         <View style={styles.container}>
             <Text style={styles.loginTitle}>Đăng Nhập</Text>
             <TextInput
@@ -110,6 +150,8 @@ const LoginScreen = () => {
                 placeholder="Số điện thoại hoặc email"
                 keyboardType="email-address"
                 placeholderTextColor="#A9A9A9"
+                value={email}
+                onChangeText={setEmail}
             />
 
             <TextInput
@@ -117,10 +159,12 @@ const LoginScreen = () => {
                 placeholder="Mật khẩu"
                 secureTextEntry
                 placeholderTextColor="#A9A9A9"
+                value={password}
+                onChangeText={setPassword}
             />
 
             {/* Sửa lỗi: Thêm onPress và sử dụng đúng style */}
-            <TouchableOpacity style={styles.loginButton}>
+            <TouchableOpacity style={styles.loginButton} onPress={() => handleLogin()}>
                 <Text style={styles.loginText}>Đăng nhập</Text>
             </TouchableOpacity>
 
