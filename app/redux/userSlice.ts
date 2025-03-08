@@ -32,12 +32,17 @@ const userSlice = createSlice({
             );
         },
         clearUser: (state) => {
-            state.token = "";
-            state.phone = "";
-            state.avata = null;
+            state.token = ""; // Xóa token nhưng giữ lại thông tin user
+            AsyncStorage.getItem("user").then((storedUser) => {
+                if (storedUser) {
+                    const updatedUser = {...JSON.parse(storedUser), token: ""};
+                    AsyncStorage.setItem("user", JSON.stringify(updatedUser));
+                }
+            }).catch((err) => console.error("Cập nhật user thất bại:", err));
         }
     },
 });
+
 
 export const {setUser, clearUser} = userSlice.actions;
 export default userSlice.reducer;

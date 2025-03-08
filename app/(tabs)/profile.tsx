@@ -4,7 +4,7 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/app/redux/store";
 import { useRouter } from "expo-router";
-import { clearUser } from "@/app/redux/userSlice";
+import {clearUser, setUser} from "@/app/redux/userSlice";
 
 export default function ProfileScreen() {
     const router = useRouter();
@@ -44,6 +44,7 @@ export default function ProfileScreen() {
                 onPress: () => {
                     console.log("Người dùng đã đăng xuất");
                     dispatch(clearUser());
+                    dispatch(setUser(null));
                     router.push("/authen/login");
                 },
                 style: "destructive",
