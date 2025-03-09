@@ -1,8 +1,8 @@
-import {StyleSheet, TouchableOpacity, View, Text, TextInput, Dimensions, Image} from 'react-native';
+import {StyleSheet, TouchableOpacity, View, Text, TextInput, Dimensions, Image, Modal} from 'react-native';
 import React, {useEffect, useState} from 'react';
 import {Ionicons} from "@expo/vector-icons";
 import {setUser} from '../redux/userSlice'
-import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import {GoogleSignin} from '@react-native-google-signin/google-signin';
 import {useRouter} from "expo-router";
 import {useDispatch, useSelector} from "react-redux";
 import {RootState} from "@/app/redux/store";
@@ -27,6 +27,10 @@ const LoginScreen = () => {
     const [showInput, setShowInput] = useState<boolean>(false);
 
     const [userstore, setUserStore] = useState<any>(null);
+
+
+    const [forgotPasswordVisible, setForgotPasswordVisible] = useState(false);
+
 
     useEffect(() => {
         const loadToken = async () => {
@@ -115,7 +119,7 @@ const LoginScreen = () => {
 
             // Đăng nhập Google
             const signInResult = await GoogleSignin.signIn();
-            const idTokengg = signInResult.data?.idToken ? signInResult.data?.idToken: " ";
+            const idTokengg = signInResult.data?.idToken ? signInResult.data?.idToken : " ";
 
             const googleCredential = auth.GoogleAuthProvider.credential(idTokengg);
 
@@ -164,12 +168,13 @@ const LoginScreen = () => {
 
             {userstore && !showInput ? (
                 <View style={styles.userContainer}>
-                    <Ionicons name="person-circle" size={60} color="#fff" style={styles.userIcon}/>
+                    <Ionicons name="person-circle" size={60} color="#fff"/>
                     <Text style={styles.userName}>{userstore?.email}</Text>
-                    <Text style={styles.userEmail}>{userstore?.name ?? userstore?.phone ?? "Chưa có email"}</Text>
+                    <Text style={styles.userEmail}>
+                        {userstore?.name ?? "Chưa có thông tin"}
+                    </Text>
                 </View>
             ) : (
-                // Hiển thị ô nhập email
                 <TextInput
                     style={styles.inputField}
                     placeholder="Số điện thoại hoặc email"
@@ -179,78 +184,151 @@ const LoginScreen = () => {
                     onChangeText={setEmail}
                 />
             )}
-            <>
-                {/* Ô nhập mật khẩu */}
-                <TextInput
-                    style={styles.inputField}
-                    placeholder="Mật khẩu"
-                    secureTextEntry
-                    placeholderTextColor="#A9A9A9"
-                    value={password}
-                    onChangeText={setPassword}
-                />
 
-                <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
-                    <Text style={styles.loginText}>Đăng nhập</Text>
+            <TextInput
+                style={styles.inputField}
+                placeholder="Mật khẩu"
+                secureTextEntry
+                placeholderTextColor="#A9A9A9"
+                value={password}
+                onChangeText={setPassword}
+            />
+
+            <TouchableOpacity onPress={() => setForgotPasswordVisible(true)}>
+                <Text style={styles.forgotPassword}>Quên mật khẩu?</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.loginButton}>
+                <Text style={styles.loginText}>Đăng nhập</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity onPress={() => setShowInput(!showInput)}>
+                <Text style={styles.infoText}>
+                    {showInput ? "Đăng nhập tài khoản có trên máy" : "Đăng nhập bằng tài khoản khác"}
+                </Text>
+            </TouchableOpacity>
+
+            <Text style={styles.alternativeText}>Hoặc đăng nhập bằng</Text>
+
+            <TouchableOpacity style={styles.googleButton} onPress={() => signIn()}>
+                <Ionicons name="logo-google" size={24} color="white" style={styles.googleIcon}/>
+                <Text style={styles.buttonText}>Đăng nhập với Google</Text>
+            </TouchableOpacity>
+
+            <View style={styles.bottomText}>
+                <Text style={{color: "#fff", fontSize: 14}}>Chưa có tài khoản?</Text>
+                <TouchableOpacity onPress={regis}>
+                    <Text style={styles.link}> Đăng ký ngay</Text>
                 </TouchableOpacity>
-                <TouchableOpacity onPress={() => setShowInput(!showInput)}>
-                    <Text style={styles.infoText}>
-                        {showInput ? "Đăng nhập tài khoản có trên máy" : "Đăng nhập bằng tài khoản khác"}
-                    </Text>
-                </TouchableOpacity>
-
-                <Text style={styles.alternativeText}>Hoặc đăng nhập bằng</Text>
-
-                <TouchableOpacity style={styles.googleButton} onPress={() => signIn()}>
-                    <Ionicons name="logo-google" size={24} color="white" style={styles.googleIcon}/>
-                    <Text style={styles.buttonText}>Đăng nhập với Google</Text>
-                </TouchableOpacity>
-
-                <View style={styles.bottomText}>
-                    <Text style={{color: "#fff", fontSize: 14}}>Chưa có tài khoản?</Text>
-                    <TouchableOpacity onPress={regis}>
-                        <Text style={styles.link}>Đăng ký ngay</Text>
-                    </TouchableOpacity>
-                </View>
-            </>
-
+            </View>
+            <ForgotPasswordDialog
+                visible={forgotPasswordVisible}
+                onClose={() => setForgotPasswordVisible(false)}
+            />
         </View>
     );
 
 }
+
+
+const ForgotPasswordDialog = ({visible, onClose}) => {
+    const [resetEmail, setResetEmail] = useState("");
+    const [verificationCode, setVerificationCode] = useState("");
+    const [newPassword, setNewPassword] = useState("");
+    const [confirmPassword, setConfirmPassword] = useState("");
+    const [showFields, setShowFields] = useState(false);
+
+    const handleSendCode = () => {
+        if (resetEmail) {
+            setShowFields(true);
+        }
+    };
+
+    const handleResetPassword = () => {
+        // Logic đặt lại mật khẩu
+    };
+
+    return (
+        <Modal visible={visible} transparent animationType="fade">
+            <View style={styles.modalContainer}>
+                <View style={styles.modalContent}>
+                    <Text style={styles.modalTitle}>Quên Mật Khẩu</Text>
+                    <TextInput style={styles.input} placeholder="Email" value={resetEmail}
+                               onChangeText={setResetEmail}/>
+                    <TouchableOpacity style={styles.button} onPress={handleSendCode}>
+                        <Text style={styles.buttonText}>Gửi mã</Text>
+                    </TouchableOpacity>
+                    {showFields && (
+                        <>
+                            <TextInput style={styles.input} placeholder="Mã xác nhận" value={verificationCode}
+                                       onChangeText={setVerificationCode}/>
+                            <TextInput style={styles.input} placeholder="Mật khẩu mới" secureTextEntry
+                                       value={newPassword} onChangeText={setNewPassword}/>
+                            <TextInput style={styles.input} placeholder="Xác nhận mật khẩu" secureTextEntry
+                                       value={confirmPassword} onChangeText={setConfirmPassword}/>
+                            <TouchableOpacity style={styles.button}>
+                                <Text style={styles.buttonText}>Xác nhận</Text>
+                            </TouchableOpacity>
+                        </>
+                    )}
+                    <TouchableOpacity onPress={onClose}>
+                        <Text style={styles.closeText}>Đóng</Text>
+                    </TouchableOpacity>
+                </View>
+            </View>
+        </Modal>
+    );
+};
+
+
 const windowHeight = Dimensions.get("window").height;
 const windowWidth = Dimensions.get("window").width;
 const styles = StyleSheet.create({
-    userContainer: {
-        width: "85%",
-        backgroundColor: "#2A2A2A",
-        borderRadius: 10,
-        padding: 15,
-        alignItems: "center",
+    modalContainer: {
+        flex: 1,
         justifyContent: "center",
-        shadowColor: "#000",
-        shadowOpacity: 0.2,
-        shadowOffset: {width: 0, height: 3},
-        shadowRadius: 5,
-        elevation: 5,
-        marginBottom: 20,
-    },
-    userInfo: {
         alignItems: "center",
-        marginBottom: 10,
+        backgroundColor: "rgba(0, 0, 0, 0.5)",
     },
-    userIcon: {
-        marginBottom: 10,
+    modalContent: {
+        width: "85%",
+        backgroundColor: "#fff",
+        padding: 15,
+        borderRadius: 8,
+        alignItems: "center",
     },
-    userName: {
-        fontSize: 20,
+    modalTitle: {
+        fontSize: 18,
         fontWeight: "bold",
-        color: "#fff",
-        marginBottom: 4,
+        marginBottom: 10,
     },
-    userEmail: {
-        fontSize: 16,
-        color: "#ccc",
+    input: {
+        width: "100%",
+        padding: 8,
+        borderWidth: 1,
+        borderColor: "#ddd",
+        borderRadius: 5,
+        marginBottom: 8,
+    },
+    button: {
+        backgroundColor: "#4DA6FF",
+        paddingVertical: 8,
+        width: "100%",
+        borderRadius: 5,
+        alignItems: "center",
+        marginBottom: 8,
+    },
+    buttonConfirm: {
+        backgroundColor: "#FF4D4D",
+        paddingVertical: 8,
+        width: "100%",
+        borderRadius: 5,
+        alignItems: "center",
+        marginBottom: 8,
+    },
+    closeText: {
+        color: "#007BFF",
+        marginTop: 5,
     },
     container: {
         flex: 1,
@@ -260,41 +338,69 @@ const styles = StyleSheet.create({
         paddingHorizontal: 20,
     },
     loginTitle: {
-        fontSize: 26,
+        fontSize: 28,
         fontWeight: "bold",
         color: "#fff",
-        marginBottom: windowHeight * 0.05,
+        marginBottom: 20,
     },
-    infoText: {
-        fontSize: 12,
+    userContainer: {
+        width: "90%",
+        backgroundColor: "#2A2A2A",
+        borderRadius: 12,
+        paddingVertical: 20,
+        alignItems: "center",
+        marginBottom: 20,
+        shadowColor: "#000",
+        shadowOpacity: 0.2,
+        shadowOffset: {width: 0, height: 3},
+        shadowRadius: 5,
+        elevation: 5,
+    },
+    userName: {
+        fontSize: 18,
+        fontWeight: "bold",
+        color: "#fff",
+        marginTop: 8,
+    },
+    userEmail: {
+        fontSize: 14,
         color: "#ccc",
-        marginTop: 5,
-        textAlign: "center",
     },
     inputField: {
         height: 50,
-        width: windowWidth * 0.85,
+        width: "90%",
         backgroundColor: "#fff",
         borderRadius: 10,
-        marginBottom: 15,
+        marginBottom: 10,
         paddingHorizontal: 15,
         fontSize: 16,
         color: "#232323",
     },
+    forgotPassword: {
+        fontSize: 14,
+        color: "#4DA6FF",
+        alignSelf: "flex-end",
+        marginRight: 20,
+        marginBottom: 10,
+    },
     loginButton: {
-        flexDirection: "row",
-        alignItems: "center",
         backgroundColor: "#DB4437",
         paddingVertical: 12,
-        paddingHorizontal: 20,
+        width: "90%",
         borderRadius: 8,
-        width: windowWidth * 0.7,
-        justifyContent: "center",
+        alignItems: "center",
+        marginBottom: 15,
     },
     loginText: {
         fontSize: 18,
         fontWeight: "bold",
         color: "#fff",
+    },
+    infoText: {
+        fontSize: 14,
+        color: "#4DA6FF",
+        marginBottom: 15,
+        textAlign: "center",
     },
     alternativeText: {
         fontSize: 16,
@@ -306,10 +412,10 @@ const styles = StyleSheet.create({
         alignItems: "center",
         backgroundColor: "#DB4437",
         paddingVertical: 12,
-        paddingHorizontal: 20,
         borderRadius: 8,
-        width: windowWidth * 0.7,
+        width: "90%",
         justifyContent: "center",
+        marginBottom: 15,
     },
     googleIcon: {
         marginRight: 10,
@@ -317,18 +423,11 @@ const styles = StyleSheet.create({
     bottomText: {
         flexDirection: "row",
         alignItems: "center",
-        marginTop: 10,
     },
     buttonText: {
         color: "white",
         fontSize: 16,
         fontWeight: "bold",
-    },
-    userInfoContainer: {
-        marginTop: 20,
-        padding: 10,
-        backgroundColor: "#333",
-        borderRadius: 8,
     },
     link: {
         color: "#4DA6FF",
