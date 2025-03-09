@@ -8,6 +8,7 @@ interface UserState {
     phone: string;
     avata: Uint8Array | null;
     token: string;
+    roles: string[];
 }
 
 const initialState: UserState = {
@@ -17,6 +18,7 @@ const initialState: UserState = {
     phone: "",
     avata: null,
     token: "",
+    roles: [],
 };
 // s
 
@@ -32,14 +34,20 @@ const userSlice = createSlice({
             );
         },
         clearUser: (state) => {
-            state.token = ""; // Xóa token nhưng giữ lại thông tin user
+            state.token = "";
             AsyncStorage.getItem("user").then((storedUser) => {
                 if (storedUser) {
-                    const updatedUser = {...JSON.parse(storedUser), token: ""};
-                    AsyncStorage.setItem("user", JSON.stringify(updatedUser));
+                    const parsedUser = JSON.parse(storedUser);
+                    parsedUser.token = ""; // Chỉ xóa token
+                    AsyncStorage.setItem("user", JSON.stringify(parsedUser))
+                        .then(() => {
+                            console.log("✅ Đã cập nhật user (token = ''):", parsedUser);
+                        })
+                        .catch((err) => console.error("❌ Cập nhật user thất bại:", err));
                 }
-            }).catch((err) => console.error("Cập nhật user thất bại:", err));
+            }).catch((err) => console.error("❌ Lấy user thất bại:", err));
         }
+
     },
 });
 

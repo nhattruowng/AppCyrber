@@ -9,9 +9,9 @@ import {Colors} from '@/constants/Colors';
 import {useColorScheme} from '@/hooks/useColorScheme';
 import {AntDesign, Ionicons, Feather} from "@expo/vector-icons";
 
+
 export default function TabLayout() {
     const colorScheme = useColorScheme();
-
     return (
         <Tabs
             screenOptions={{
@@ -35,6 +35,7 @@ export default function TabLayout() {
                         <IconSymbol size={28} name="house.fill" color={color}/>,
                 }}
             />
+
             <Tabs.Screen
                 name="calendar"
                 options={{

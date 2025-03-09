@@ -2,14 +2,14 @@ import {StyleSheet, TouchableOpacity, View, Text, TextInput, Dimensions, Image} 
 import React, {useEffect, useState} from 'react';
 import {Ionicons} from "@expo/vector-icons";
 import {setUser} from '../redux/userSlice'
-import {GoogleSignin} from '@react-native-google-signin/google-signin';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import {useRouter} from "expo-router";
 import {useDispatch, useSelector} from "react-redux";
 import {RootState} from "@/app/redux/store";
 import {useNavigation} from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import auth from "@react-native-firebase/auth";
-
+import {jwtDecode} from "jwt-decode";
+import auth from '@react-native-firebase/auth';
 
 GoogleSignin.configure({
     webClientId: '1062171005115-9ds8cailu4f4lgmrb9q9f6ub3je13474.apps.googleusercontent.com',
@@ -19,14 +19,33 @@ GoogleSignin.configure({
 const LoginScreen = () => {
     const user = useSelector((state: RootState) => state.user);
     const router = useRouter();
-    const navigation = useNavigation();
-
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [token, setToken] = useState<string | null>(null);
     const dispatch = useDispatch();
 
     const [showInput, setShowInput] = useState<boolean>(false);
+
+    const [userstore, setUserStore] = useState<any>(null);
+
+    useEffect(() => {
+        const loadToken = async () => {
+            try {
+                const usertor = await AsyncStorage.getItem("user");
+                if (usertor) {
+                    const parsedUser = JSON.parse(usertor); // Parse JSON thành object
+                    setUserStore(parsedUser);
+                    console.log("✅ Đã load user:", parsedUser);
+                } else {
+                    console.log("⚠️ Không tìm thấy user trong AsyncStorage");
+                }
+            } catch (error) {
+                console.error("❌ Lỗi khi load user:", error);
+            }
+        };
+
+        loadToken();
+    }, []);
 
     useEffect(() => {
         const loadUserData = async () => {
@@ -63,6 +82,10 @@ const LoginScreen = () => {
                 throw new Error('Đăng nhập thất bại');
             }
             const data = await response.json();
+            const decoded: any = jwtDecode(data.data.token);
+            const roles = decoded.roles || [];
+
+            console.log(roles)
             dispatch(
                 setUser({
                     id: data.data.id,
@@ -71,9 +94,10 @@ const LoginScreen = () => {
                     phone: data.data.phone || "",
                     avata: data.data.avata instanceof ArrayBuffer ? new Uint8Array(data.data.avata) : null,
                     token: data.data.token,
+                    roles: roles,
                 })
             );
-            if(user){
+            if (user) {
                 router.push("/calendar")
             }
             console.log('Đăng nhập thành công!');
@@ -91,9 +115,10 @@ const LoginScreen = () => {
 
             // Đăng nhập Google
             const signInResult = await GoogleSignin.signIn();
-            const googleCredential = auth.GoogleAuthProvider.credential(signInResult.data.idToken);
+            const idTokengg = signInResult.data?.idToken ? signInResult.data?.idToken: " ";
 
-            // Đăng nhập Firebase bằng Google
+            const googleCredential = auth.GoogleAuthProvider.credential(idTokengg);
+
             const firebaseUserCredential = await auth().signInWithCredential(googleCredential);
 
             // Lấy Firebase ID Token
@@ -108,6 +133,11 @@ const LoginScreen = () => {
             });
 
             const data = await response.json();
+            const decoded: any = jwtDecode(data.data.token);
+            const roles = decoded.roles || [];
+
+            console.log(roles)
+
             dispatch(
                 setUser({
                     id: data.data.id,
@@ -116,10 +146,11 @@ const LoginScreen = () => {
                     phone: data.data.phone || "",
                     avata: data.data.avata instanceof ArrayBuffer ? new Uint8Array(data.data.avata) : null,
                     token: data.data.token,
+                    roles: roles,
                 })
             );
 
-            if(user){
+            if (user) {
                 router.push("/profile")
             }
         } catch (error) {
@@ -131,12 +162,11 @@ const LoginScreen = () => {
         <View style={styles.container}>
             <Text style={styles.loginTitle}>Đăng Nhập</Text>
 
-            {user && !showInput ? (
-                // Hiển thị thông tin user
+            {userstore && !showInput ? (
                 <View style={styles.userContainer}>
-                    <Ionicons name="person-circle" size={60} color="#fff" style={styles.userIcon} />
-                    <Text style={styles.userName}>{user.name}</Text>
-                    <Text style={styles.userEmail}>{user.email ?? user.phone ?? "Chưa có email"}</Text>
+                    <Ionicons name="person-circle" size={60} color="#fff" style={styles.userIcon}/>
+                    <Text style={styles.userName}>{userstore?.email}</Text>
+                    <Text style={styles.userEmail}>{userstore?.name ?? userstore?.phone ?? "Chưa có email"}</Text>
                 </View>
             ) : (
                 // Hiển thị ô nhập email
@@ -164,10 +194,10 @@ const LoginScreen = () => {
                     <Text style={styles.loginText}>Đăng nhập</Text>
                 </TouchableOpacity>
                 <TouchableOpacity onPress={() => setShowInput(!showInput)}>
-                <Text style={styles.infoText}>
-                    {showInput ? "Đăng nhập tài khoản có trên máy" : "Đăng nhập bằng tài khoản khác"}
-                </Text>
-            </TouchableOpacity>
+                    <Text style={styles.infoText}>
+                        {showInput ? "Đăng nhập tài khoản có trên máy" : "Đăng nhập bằng tài khoản khác"}
+                    </Text>
+                </TouchableOpacity>
 
                 <Text style={styles.alternativeText}>Hoặc đăng nhập bằng</Text>
 
