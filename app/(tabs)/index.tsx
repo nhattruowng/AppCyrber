@@ -15,6 +15,8 @@ import HeightSelectionScreen from "../screen/HeightSelectionScreen";
 import ForgetPasswordScreen from "../screen/login/ForgetPassword";
 import ResetPasswordScreen from "../screen/login/ResetPassword";
 import GymPackagesScreen from "../screen/GymPackages";
+import ManageAccounts from "../screen/admin/ManageAccounts";
+import AdminDashboard from "../screen/admin/AdminDashboard";
 
 const Tab = createBottomTabNavigator();
 
@@ -57,8 +59,8 @@ export default function App() {
         },
       })}
     >
-      <Tab.Screen name="Home" component={GymPackagesScreen} />
-      <Tab.Screen name="Resources" component={ResetPasswordScreen} />
+      <Tab.Screen name="Home" component={ManageAccounts} />
+      <Tab.Screen name="Resources" component={AdminDashboard} />
       <Tab.Screen name="Star" component={LoginScreen} />
       <Tab.Screen name="Notification" component={RegisterScreen} />
       <Tab.Screen name="Profile" component={Profile} />
