@@ -1,8 +1,9 @@
-import { useState } from "react";
-import { Text, View, StyleSheet, FlatList, TouchableOpacity, Modal } from "react-native";
-import { Calendar, LocaleConfig } from "react-native-calendars";
+import {useEffect, useState} from "react";
+import {Text, View, StyleSheet, FlatList, TouchableOpacity, Modal} from "react-native";
+import {Calendar, LocaleConfig} from "react-native-calendars";
 import moment from "moment";
 import "moment/locale/vi";
+import {Picker} from "@react-native-picker/picker";
 
 LocaleConfig.locales["vi"] = {
     monthNames: [
@@ -17,21 +18,48 @@ LocaleConfig.defaultLocale = "vi";
 
 export default function CalendarScreen() {
     const [selectedDate, setSelectedDate] = useState("");
-    const [selectedItem, setSelectedItem] = useState<string | null>(null);
+    const [selectedItem, setSelectedItem] = useState(null);
     const [modalVisible, setModalVisible] = useState(false);
+    const [selectedTime, setSelectedTime] = useState(null);
+    const [selectedPT, setSelectedPT] = useState(null);
+    const [availableTimes, setAvailableTimes] = useState([]);
 
-    const getEventsForDate = (date: string) => {
+    const apiDuration = 15; // Thời gian khả dụng là 15 tiếng tính từ 6h sáng
+    const startHour = 6; // Bắt đầu từ 6h sáng
+
+    useEffect(() => {
+        const currentHour = new Date().getHours();
+        const endHour = startHour + apiDuration;
+        const actualStartHour = Math.max(currentHour, startHour);
+        const times = [];
+
+        for (let i = actualStartHour; i <= endHour && i < 24; i++) {
+            times.push(`${i}:00`);
+        }
+
+        setAvailableTimes(times);
+    }, [modalVisible]);
+
+    const availablePTs = [
+        {id: 1, name: "Nguyễn Văn A", exp: "5 năm"},
+        {id: 2, name: "Trần Thị B", exp: "3 năm"},
+        {id: 3, name: "Lê Văn C", exp: "7 năm"},
+    ];
+
+    const getEventsForDate = (date) => {
         const day = moment(date, "DD/MM/YYYY").date();
         return day % 2 === 0
             ? [
-                { id: "1", title: "Sự kiện 1", details: "Chi tiết sự kiện 1" },
-                { id: "2", title: "Sự kiện 2", details: "Chi tiết sự kiện 2" },
+                {id: "1", title: "Sự kiện 1", details: "Chi tiết sự kiện 1"},
+                {id: "2", title: "Sự kiện 2", details: "Chi tiết sự kiện 2"},
             ]
             : [
-                { id: "3", title: "Sự kiện 2", details: "Chi tiết sự kiện 2" },
-                { id: "4", title: "Sự kiện 4", details: "Chi tiết sự kiện 4" },
+                {id: "3", title: "Sự kiện 3", details: "Chi tiết sự kiện 3"},
+                {id: "4", title: "Sự kiện 4", details: "Chi tiết sự kiện 4"},
             ];
     };
+    const isPastDate = selectedDate && moment(selectedDate, "DD/MM/YYYY").isBefore(moment(), "day");
+
 
     return (
         <View style={styles.container}>
@@ -39,7 +67,8 @@ export default function CalendarScreen() {
                 onDayPress={(day) => setSelectedDate(moment(day.dateString).format("DD/MM/YYYY"))}
                 markedDates={{
                     [moment(selectedDate, "DD/MM/YYYY").format("YYYY-MM-DD")]: {
-                        selected: true, selectedColor: "#007AFF"
+                        selected: true,
+                        selectedColor: "#007AFF",
                     },
                 }}
             />
@@ -49,12 +78,14 @@ export default function CalendarScreen() {
                     <FlatList
                         data={getEventsForDate(selectedDate)}
                         keyExtractor={(item) => item.id}
-                        renderItem={({ item }) => (
+                        renderItem={({item}) => (
                             <TouchableOpacity
                                 style={styles.item}
                                 onPress={() => {
                                     setSelectedItem(item.details);
                                     setModalVisible(true);
+                                    setSelectedTime(null);
+                                    setSelectedPT(null);
                                 }}
                             >
                                 <Text style={styles.itemText}>{item.title}</Text>
@@ -70,12 +101,84 @@ export default function CalendarScreen() {
                 animationType="slide"
                 onRequestClose={() => setModalVisible(false)}
             >
-                <View style={styles.modalContainer}>
-                    <View style={styles.modalContent}>
-                        <Text style={styles.modalText}>{selectedItem}</Text>
-                        <TouchableOpacity onPress={() => setModalVisible(false)}>
-                            <Text style={styles.closeButton}>Đóng</Text>
-                        </TouchableOpacity>
+                <View style={styles.modalOverlay}>
+                    <View style={styles.modalContainer}>
+                        <Text style={styles.modalTitle}>Thông tin lịch hẹn</Text>
+
+                        <View style={styles.modalSection}>
+                            <Text style={styles.modalLabel}>Ngày hẹn:</Text>
+                            <Text style={styles.modalValue}>{selectedDate || "Chưa chọn"}</Text>
+                        </View>
+
+                        {selectedDate && moment(selectedDate, "DD/MM/YYYY").isBefore(moment(), "day") ? (
+                            <>
+                                <View style={styles.modalSection}>
+                                    <Text style={styles.modalLabel}>Trạng thái:</Text>
+                                    <Text style={[styles.modalValue, styles.statusPast]}>⏳ Đã qua</Text>
+                                </View>
+                                <View style={styles.modalSection}>
+                                    <Text style={styles.modalLabel}>Giờ:</Text>
+                                    <Text style={styles.modalValue}>{selectedTime || "Chưa có"}</Text>
+                                </View>
+                                <View style={styles.modalSection}>
+                                    <Text style={styles.modalLabel}>PT:</Text>
+                                    <Text style={styles.modalValue}>{selectedPT?.name || "Chưa có"}</Text>
+                                </View>
+                            </>
+                        ) : (
+                            <>
+                                <View style={styles.modalSection}>
+                                    <Text style={styles.modalLabel}>Trạng thái:</Text>
+                                    <Text style={[styles.modalValue, styles.statusPending]}>🔄 Chưa thực thi</Text>
+                                </View>
+
+                                <View style={styles.modalSection}>
+                                    <Text style={styles.modalLabel}>Chọn giờ hẹn:</Text>
+                                    <Picker
+                                        selectedValue={selectedTime}
+                                        onValueChange={(value) => setSelectedTime(value)}
+                                        style={styles.picker}
+                                    >
+                                        <Picker.Item label="Chọn giờ" value={null}/>
+                                        {availableTimes.map((time) => (
+                                            <Picker.Item key={time} label={time} value={time}/>
+                                        ))}
+                                    </Picker>
+                                </View>
+
+                                {selectedTime && (
+                                    <View style={styles.modalSection}>
+                                        <Text style={styles.modalLabel}>Chọn PT:</Text>
+                                        <Picker
+                                            selectedValue={selectedPT}
+                                            onValueChange={(value) => setSelectedPT(value)}
+                                            style={styles.picker}
+                                        >
+                                            <Picker.Item label="Chọn PT" value={null}/>
+                                            {availablePTs.map((pt) => (
+                                                <Picker.Item
+                                                    key={pt.id}
+                                                    label={`${pt.name} (${pt.exp})`}
+                                                    value={pt}
+                                                />
+                                            ))}
+                                        </Picker>
+                                    </View>
+                                )}
+                            </>
+                        )}
+
+                        <View style={styles.buttonContainer}>
+                            <TouchableOpacity onPress={() => setModalVisible(false)} style={styles.closeButton}>
+                                <Text style={styles.closeButtonText}>Đóng</Text>
+                            </TouchableOpacity>
+                            {!isPastDate && (
+                                <TouchableOpacity onPress={() => console.log("Xác nhận đặt lịch")}
+                                                  style={styles.closeButton}>
+                                    <Text style={styles.confirmButtonText}>Xác nhận</Text>
+                                </TouchableOpacity>
+                            )}
+                        </View>
                     </View>
                 </View>
             </Modal>
@@ -84,10 +187,12 @@ export default function CalendarScreen() {
 }
 
 const styles = StyleSheet.create({
+    buttonContainer: { flexDirection: "row", justifyContent: "space-between", width: "100%", marginTop: 20 },
+    confirmButtonText: { fontSize: 16, color: "white" },
     container: {
         flex: 1,
         padding: 20,
-        backgroundColor: "#fff"
+        backgroundColor: "#fff",
     },
     listContainer: {
         marginTop: 20,
@@ -106,25 +211,66 @@ const styles = StyleSheet.create({
     itemText: {
         fontSize: 16,
     },
-    modalContainer: {
+    modalOverlay: {
         flex: 1,
         justifyContent: "center",
         alignItems: "center",
-        backgroundColor: "rgba(0,0,0,0.5)",
+        backgroundColor: "rgba(0, 0, 0, 0.6)", // Tăng độ mờ nền
     },
-    modalContent: {
-        backgroundColor: "white",
+    modalContainer: {
+        backgroundColor: "#fff",
+        width: "85%",
         padding: 20,
-        borderRadius: 10,
-        width: "80%",
-        alignItems: "center",
+        borderRadius: 15,
+        shadowColor: "#000",
+        shadowOffset: {width: 0, height: 2},
+        shadowOpacity: 0.3,
+        shadowRadius: 5,
+        elevation: 5,
     },
-    modalText: {
-        fontSize: 18,
+    modalTitle: {
+        fontSize: 22,
+        fontWeight: "bold",
+        color: "#333",
+        textAlign: "center",
         marginBottom: 20,
     },
-    closeButton: {
+    modalSection: {
+        marginBottom: 20,
+        width: "100%",
+    },
+    modalLabel: {
         fontSize: 16,
-        color: "blue",
-    }
+        fontWeight: "600",
+        color: "#555",
+        marginBottom: 8,
+    },
+    modalValue: {
+        fontSize: 16,
+        color: "#333",
+    },
+    statusPast: {
+        color: "#e74c3c", // Màu đỏ cho trạng thái "Đã qua"
+    },
+    statusPending: {
+        color: "#3498db", // Màu xanh cho trạng thái "Chưa thực thi"
+    },
+    picker: {
+        width: "100%",
+        backgroundColor: "#f9f9f9",
+        borderRadius: 8,
+    },
+    closeButton: {
+        backgroundColor: "#007AFF",
+        paddingVertical: 12,
+        paddingHorizontal: 30,
+        borderRadius: 8,
+        alignSelf: "center",
+        marginTop: 10,
+    },
+    closeButtonText: {
+        color: "#fff",
+        fontSize: 16,
+        fontWeight: "600",
+    },
 });
