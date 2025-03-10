@@ -75,7 +75,14 @@ const LoginScreen = () => {
     const handleLogin = async () => {
         try {
 
-            const response = await fetch('https://gymbe-production-233d.up.railway.app/api/authen/login', {
+//            const response = await fetch('https://gymbe-production-233d.up.railway.app/api/authen/login', {
+//                method: 'POST',
+//                headers: {
+//                    'Content-Type': 'application/json',
+//                },
+//                body: JSON.stringify({email, password}),
+//            });
+            const response = await fetch('http://10.0.2.2:8080/api/authen/login', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -198,7 +205,7 @@ const LoginScreen = () => {
                 <Text style={styles.forgotPassword}>Quên mật khẩu?</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.loginButton}>
+            <TouchableOpacity style={styles.loginButton} onPress={() => handleLogin()}>
                 <Text style={styles.loginText}>Đăng nhập</Text>
             </TouchableOpacity>
 
