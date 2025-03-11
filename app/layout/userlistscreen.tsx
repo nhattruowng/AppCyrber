@@ -9,11 +9,36 @@ interface User {
   name: string;
   email: string;
   roles?: string[];
-  locked: boolean;
+  enable: boolean;
 }
 
+
+const mockUserDetails = {
+  id: 1,
+  name: "Nguyễn Văn A",
+  email: "nguyenvana@gmail.com",
+  enable: true,
+  details: [
+    {
+      title: "Thông tin cá nhân",
+      items: [
+        { label: "Số điện thoại", value: "0123 456 789" },
+        { label: "Ngày sinh", value: "15/03/1990" },
+        { label: "Địa chỉ", value: "123 Đường Láng, Hà Nội" },
+      ]
+    },
+    {
+      title: "Thông tin tài khoản",
+      items: [
+        { label: "Ngày tạo", value: "01/01/2023" },
+        { label: "Lần đăng nhập cuối", value: "10/03/2025" },
+      ]
+    }
+  ]
+};
+
 const API_URL = "http://10.0.2.2:8080/api/authen/get-all";
-const DELETE_URL = "http://10.0.2.2:8080/api/authen/delete";
+const TOGGLE_URL = "http://10.0.2.2:8080/api/authen/delete"; // Sử dụng chung URL cho toggle
 
 export default function UserListScreen() {
   const [users, setUsers] = useState<User[]>([]);
@@ -22,62 +47,44 @@ export default function UserListScreen() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isModalVisible, setModalVisible] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
-
   const user = useSelector((state: RootState) => state.user);
 
-  useEffect(() => {
-    const fetchUsers = async () => {
-      setIsLoading(true);
-      setError(null);
-      try {
-        const response = await fetch(API_URL, {
-          method: "GET",
-          headers: {
-            "Authorization": `Bearer ${user.token}`,
-            "Accept": "application/json",
-          },
-        });
+  // Fetch users
+  const fetchUsers = async () => {
+    if (!user.token) return setUsers([]);
 
-        if (!response.ok) {
-          throw new Error(`HTTP Error: ${response.status}`);
-        }
-
-        const data = await response.json();
-        console.log("Raw API response:", JSON.stringify(data, null, 2)); // Log dữ liệu gốc
-
-        // Kiểm tra và xử lý dữ liệu
-        const userData = data.data || data; // Nếu không có data.data, thử dùng data trực tiếp
-        if (!Array.isArray(userData)) {
-          throw new Error("Dữ liệu trả về không phải là mảng");
-        }
-
-        const filteredData = userData.filter((u: User) => !u.roles?.includes("Admin"));
-        console.log("Filtered data:", filteredData); // Log dữ liệu sau khi lọc
-
-        setUsers(filteredData);
-        setFilteredUsers(filteredData);
-      } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : "Không thể tải danh sách người dùng";
-        setError(errorMessage);
-        console.error("Error fetching users:", err);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    if (user.token) {
-      fetchUsers();
-    } else {
-      setError("Không có token, vui lòng đăng nhập lại");
+    setIsLoading(true);
+    try {
+      const response = await fetch(API_URL, {
+        headers: {
+          "Authorization": `Bearer ${user.token}`,
+          "Accept": "application/json",
+        },
+      });
+      if (!response.ok) throw new Error("Không thể tải dữ liệu");
+      const data = await response.json();
+      const userData = Array.isArray(data.data) ? data.data : data;
+      const filteredData = userData.filter((u: User) => !u.roles?.includes("ADMIN"));
+      setUsers(filteredData);
+      setFilteredUsers(filteredData);
+    } catch (err) {
+      console.error("Error:", err);
+    } finally {
+      setIsLoading(false);
     }
+  };
+
+  // Initial fetch
+  useEffect(() => {
+    fetchUsers();
   }, [user.token]);
 
+  // Filter users based on search
   useEffect(() => {
     const lowerSearch = search.toLowerCase();
     const filtered = users.filter(
       (u) =>
-        u.role !== "ADMIN" &&
+        !u.role?.includes("ADMIN") && // Sửa từ role thành roles để khớp với interface
         ((u.name || "").toLowerCase().includes(lowerSearch) ||
           (u.email || "").toLowerCase().includes(lowerSearch))
     );
@@ -85,52 +92,49 @@ export default function UserListScreen() {
     console.log("Filtered users after search:", filtered);
   }, [search, users]);
 
-
-  const handleLockPress = (user: User) => {
-    setSelectedUser(user);
+  // Toggle lock/unlock user
+  const handleToggleLock = (userItem: User) => {
+    if (!user.token) {
+      alert("Vui lòng đăng nhập lại để thực hiện thao tác này");
+      return;
+    }
+    setSelectedUser(userItem);
     setModalVisible(true);
   };
 
-  const confirmLockUser = async () => {
-    if (!selectedUser) return;
+  const confirmToggleLock = async () => {
+    if (!selectedUser || !user.token) return;
 
     setIsLoading(true);
     try {
-      const response = await fetch(`${DELETE_URL}?id=${encodeURIComponent(selectedUser.id)}`, {
-        method: "DELETE", // Dùng DELETE cho cả khóa và mở khóa
+      const newStatus = !selectedUser.enable; // Đảo ngược trạng thái hiện tại
+      const response = await fetch(`${TOGGLE_URL}/${selectedUser.id}`, {
+        method: "DELETE", // Hoặc DELETE nếu backend yêu cầu
         headers: {
           "Authorization": `Bearer ${user.token}`,
           "Accept": "application/json",
+          "Content-Type": "application/json",
         },
+        body: JSON.stringify({enable: newStatus}), // Gửi trạng thái mới
       });
 
-      const responseText = await response.text();
-      console.log("Response status:", response.status);
-      console.log("Response body:", responseText);
-
-      if (!response.ok) {
-        let errorData;
-        try {
-          errorData = JSON.parse(responseText);
-        } catch (e) {
-          throw new Error(`Thao tác thất bại: ${response.status} - ${responseText}`);
-        }
-        throw new Error(errorData.message || "Thao tác thất bại");
-      }
-
-      // Đảo ngược trạng thái locked vì BE tự động toggle
-      const newLockedState = !selectedUser.locked;
-      setUsers(prev => prev.map(u =>
-        u.id === selectedUser.id ? {...u, locked: newLockedState} : u
-      ));
-      setFilteredUsers(prev => prev.map(u =>
-        u.id === selectedUser.id ? {...u, locked: newLockedState} : u
-      ));
-
+      // Kiểm tra Content-Type của phản hồi
+      const contentType = response.headers.get("Content-Type");
+      let data;
+        // Cập nhật state cục bộ
+        setUsers((prevUsers) =>
+          prevUsers.map((u) =>
+            u.id === selectedUser.id ? {...u, enable: newStatus} : u
+          )
+        );
+        setFilteredUsers((prevFiltered) =>
+          prevFiltered.map((u) =>
+            u.id === selectedUser.id ? {...u, enable: newStatus} : u
+          )
+        );
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : `Lỗi khi ${selectedUser?.locked ? "mở khóa" : "khóa"} người dùng`;
-      setError(errorMessage);
-      console.error(`Error toggling lock state:`, err);
+      console.error("Toggle error:", err);
+      alert(err.message || "Đã xảy ra lỗi khi thay đổi trạng thái người dùng");
     } finally {
       setIsLoading(false);
       setModalVisible(false);
@@ -138,53 +142,43 @@ export default function UserListScreen() {
     }
   };
 
-  // Render loading state
-  if (isLoading && users.length === 0) {
+  if (isLoading && !users.length) {
     return (
-      <View style={styles.loadingContainer}>
+      <View style={styles.centerContainer}>
         <ActivityIndicator size="large" color="#007AFF"/>
-        <Text style={styles.loadingText}>Đang tải dữ liệu...</Text>
       </View>
     );
   }
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Danh sách khách hàng</Text>
-
       <TextInput
         style={styles.searchInput}
-        placeholder="Tìm kiếm theo tên hoặc email"
+        placeholder="Tìm kiếm..."
         value={search}
         onChangeText={setSearch}
-        autoCapitalize="none"
       />
-
-      {error && <Text style={styles.errorText}>{error}</Text>}
 
       <ScrollView showsVerticalScrollIndicator={false}>
         {filteredUsers.length === 0 ? (
-          <Text style={styles.noResults}>
-            {users.length === 0 ? "Không có dữ liệu" : "Không tìm thấy khách hàng"}
-          </Text>
+          <Text style={styles.noData}>Không tìm thấy người dùng</Text>
         ) : (
           filteredUsers.map((userItem) => (
-            <View key={userItem.id} style={styles.userItem}>
-              <View style={styles.userInfo}>
-                <Text style={styles.userName}>{userItem.name || "Không có tên"}</Text>
-                <Text style={styles.userEmail}>{userItem.email || "Không có email"}</Text>
+            <View key={userItem.id} style={styles.userCard}>
+              <View>
+                <Text style={styles.userName}>{userItem.name || "N/A"}</Text>
+                <Text style={styles.userEmail}>{userItem.email || "N/A"}</Text>
+                <Text style={styles.userStatus}>
+                  Trạng thái: {userItem.enable ? "Đang hoạt động" : "Đã khóa"}
+                </Text>
               </View>
-             <TouchableOpacity
-                style={[styles.lockButton, userItem.locked && styles.locked, isLoading && styles.disabledButton]}
-                onPress={() => handleLockPress(userItem)}
+              <TouchableOpacity
+                style={[styles.toggleButton, !userItem.enable && styles.lockedButton]}
+                onPress={() => handleToggleLock(userItem)}
                 disabled={isLoading}
               >
-                <Text style={[styles.lockText, userItem.locked && styles.lockedText]}>
-                  {isLoading && selectedUser?.id === userItem.id
-                    ? "Đang xử lý..."
-                    : userItem.locked
-                      ? "🔒 Đã khóa"
-                      : "🔒 Khóa"}
+                <Text style={styles.toggleButtonText}>
+                  {!userItem.enable ? "Mở khóa" : "Khóa"}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -192,39 +186,26 @@ export default function UserListScreen() {
         )}
       </ScrollView>
 
-      <Modal
-        isVisible={isModalVisible}
-        onBackdropPress={() => !isLoading && setModalVisible(false)}
-        backdropOpacity={0.3}
-      >
-        <View style={styles.modalContainer}>
-          <Text style={styles.modalTitle}>
-            {selectedUser?.locked ? "Xác nhận mở khóa" : "Xác nhận khóa"}
+      <Modal isVisible={isModalVisible} onBackdropPress={() => !isLoading && setModalVisible(false)}>
+        <View style={styles.modal}>
+          <Text style={styles.modalText}>
+            {`Bạn muốn ${selectedUser?.enable ? "khóa" : "mở khóa"} "${selectedUser?.name || "N/A"}"?`}
           </Text>
-          <Text style={styles.modalMessage}>
-            Bạn có chắc muốn {selectedUser?.locked ? "mở khóa" : "khóa"} người dùng "
-            {selectedUser?.name || "Không tên"}" không?
-          </Text>
-          {isLoading && <ActivityIndicator size="small" color="#ff4444" />}
-          <View style={styles.modalActions}>
+          <View style={styles.modalButtons}>
             <TouchableOpacity
-              style={[styles.cancelButton, isLoading && styles.disabledButton]}
+              style={styles.cancelButton}
               onPress={() => setModalVisible(false)}
               disabled={isLoading}
             >
-              <Text style={styles.buttonText}>Hủy</Text>
+              <Text>Hủy</Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[
-                styles.confirmButton,
-                selectedUser?.locked && styles.confirmButtonUnlocked, // Thay đổi màu nếu mở khóa
-                isLoading && styles.disabledButton
-              ]}
-              onPress={confirmLockUser}
+              style={styles.confirmButton}
+              onPress={confirmToggleLock}
               disabled={isLoading}
             >
               <Text style={styles.confirmButtonText}>
-                {selectedUser?.locked ? "Mở khóa" : "Khóa"}
+                {isLoading ? "Đang xử lý..." : "Xác nhận"}
               </Text>
             </TouchableOpacity>
           </View>
@@ -237,135 +218,91 @@ export default function UserListScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
-    backgroundColor: "#f5f5f5"
+    padding: 15,
+    backgroundColor: "#F7F7F7",
   },
-  loadingContainer: {
+  centerContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
   },
-  loadingText: {
-    marginTop: 10,
-    fontSize: 16,
-    color: "#333",
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: "bold",
-    marginBottom: 15,
-    color: "#333"
-  },
   searchInput: {
-    backgroundColor: "#fff",
-    padding: 12,
+    backgroundColor: "#FFF",
+    padding: 10,
     borderRadius: 8,
     marginBottom: 15,
     borderWidth: 1,
-    borderColor: "#ddd",
-    fontSize: 16,
+    borderColor: "#E0E0E0",
   },
-  userItem: {
-    backgroundColor: "#fff",
-    padding: 15,
-    borderRadius: 8,
-    marginBottom: 10,
+  userCard: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    elevation: 2,
-  },
-  confirmButtonUnlocked: {
-    backgroundColor: "#4CAF50", // Màu xanh cho mở khóa
-  },
-  userInfo: {
-    flex: 1,
+    backgroundColor: "#FFF",
+    padding: 15,
+    borderRadius: 8,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: "#E0E0E0",
   },
   userName: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#333"
+    color: "#333",
   },
   userEmail: {
     fontSize: 14,
     color: "#666",
-    marginTop: 2
   },
-  lockButton: {
+  userStatus: {
+    fontSize: 12,
+    color: "#555",
+    marginTop: 4,
+  },
+  toggleButton: {
     padding: 8,
+    backgroundColor: "#007AFF",
     borderRadius: 5,
-    backgroundColor: "#e0e0e0",
   },
-  locked: {
-    backgroundColor: "#ff4444"
+  lockedButton: {
+    backgroundColor: "#FF3B30",
   },
-  lockText: {
-    fontSize: 14,
-    fontWeight: "500"
+  toggleButtonText: {
+    color: "#FFF",
+    fontWeight: "500",
   },
-  lockedText: {
-    color: "#fff"
+  noData: {
+    textAlign: "center",
+    color: "#666",
+    marginTop: 20,
   },
-  modalContainer: {
-    backgroundColor: "#fff",
+  modal: {
+    backgroundColor: "#FFF",
     padding: 20,
-    borderRadius: 12,
+    borderRadius: 10,
     alignItems: "center",
-    marginHorizontal: 20,
   },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 15,
-    color: "#333"
-  },
-  modalMessage: {
+  modalText: {
     fontSize: 16,
     marginBottom: 20,
     textAlign: "center",
-    color: "#666"
   },
-  modalActions: {
+  modalButtons: {
     flexDirection: "row",
-    justifyContent: "space-around",
-    width: "100%",
-    marginTop: 10,
+    gap: 20,
   },
   cancelButton: {
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    backgroundColor: "#e0e0e0",
+    padding: 10,
+    backgroundColor: "#E0E0E0",
     borderRadius: 5,
   },
   confirmButton: {
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    backgroundColor: "#ff4444",
+    padding: 10,
+    backgroundColor: "#007AFF",
     borderRadius: 5,
   },
-  buttonText: {
-    fontSize: 14,
-    color: "#333",
-    fontWeight: "500"
-  },
   confirmButtonText: {
-    fontSize: 14,
-    color: "#fff",
-    fontWeight: "500"
-  },
-  disabledButton: {
-    opacity: 0.6,
-  },
-  errorText: {
-    color: "#ff4444",
-    fontSize: 14,
-    marginBottom: 10,
-    textAlign: "center",
-  },
-  noResults: {
-    fontSize: 16,
-    color: "#666",
-    textAlign: "center",
-    marginTop: 20,
+    color: "#FFF",
+    fontWeight: "500",
   },
 });
