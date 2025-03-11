@@ -42,7 +42,8 @@ export default function RootLayout() {
                     <Stack.Screen name="(tabs)" options={{headerShown: false}}/>
                     <Stack.Screen name="authen/login" options={{headerShown: false}}/>
                     <Stack.Screen name="authen/register" options={{headerShown: false}}/>
-                    {/*<Stack.Screen name="admin/dashboard" options={{headerShown: false}}/>*/}
+                    <Stack.Screen name="layout/userlistscreen" options={{headerShown: false}}/>
+                    <Stack.Screen name="layout/ptllistscreen" options={{headerShown: false}}/>
                     <Stack.Screen name="+not-found"/>
                 </Stack>
                 <StatusBar style="auto"/>

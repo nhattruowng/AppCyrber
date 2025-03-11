@@ -1,4 +1,4 @@
-import {Image, StyleSheet, FlatList, View, Text, TextInput, TouchableOpacity, Modal, Button} from 'react-native';
+import {Image, StyleSheet, FlatList, View, Text, TextInput, TouchableOpacity, Modal, Button, Alert} from 'react-native';
 import React, {useEffect, useState} from 'react';
 import {HelloWave} from '@/components/HelloWave';
 import {ThemedText} from '@/components/ThemedText';
@@ -27,6 +27,7 @@ export default function HomeScreen() {
 
   const [editPlan, setEditPlan] = useState<MembershipPlan | null>(null);
   const [modalVisible, setModalVisible] = useState<boolean>(false);
+  const [create, setCreact] = useState<boolean>(false);
 
 
   const [openStartDate, setOpenStartDate] = useState(false);
@@ -56,18 +57,79 @@ export default function HomeScreen() {
     fetchPlans();
   }, []);
 
+  const handleSave = async () => {
+    if (!editPlan) return;
+
+    try {
+      const response = await fetch('http://10.0.2.2:8080/api/membership-plans/add-plan', {
+        method: 'POST',
+        headers: {
+          'Accept': '*/*',
+          'Authorization': `Bearer ${user.token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id: editPlan.id || "", // Nếu là tạo mới, id sẽ là chuỗi rỗng
+          name: editPlan.name,
+          description: editPlan.description,
+          price: editPlan.price,
+          startedDate: editPlan.startedDate,
+          endDate: editPlan.endDate,
+          timeInDay: editPlan.timeInDay,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Lỗi khi thêm gói thành viên');
+      }
+      const data = await response.json();
+      setModalVisible(false);
+    } catch (error) {
+    }
+  };
 
   const handleEditPress = (plan: MembershipPlan) => {
     setEditPlan(plan);
     setModalVisible(true);
   };
 
+  const handldCreatPress = () => {
+    setEditPlan(null);
+    setModalVisible(true);
+    setCreact(true);
+  };
+
+  const handleDeleteConfirmation = (planId: string) => {
+    Alert.alert(
+      "Xác nhận xóa",
+      "Bạn có chắc chắn muốn xóa gói này không?",
+      [
+        {text: "Hủy", style: "cancel"}, // Nhấn Hủy thì đóng dialog
+        {text: "Xác nhận", onPress: () => handleDeletePlan(planId)} // Nhấn Xác nhận thì gọi hàm xóa
+      ]
+    );
+  };
+  const handleDeletePlan = async (planId: string) => {
+    try {
+      const response = await fetch(`http://10.0.2.2:8080/api/membership-plans/delete-mbplan/${planId}`, {
+        method: 'DELETE',
+        headers: {
+          'Accept': '*/*',
+          'Authorization': `Bearer ${user.token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Lỗi HTTP: ${response.status}`);
+      }
+      setPlans((prevPlans) => prevPlans.filter((plan) => plan.id !== planId));
+    } catch (error) {
+      console.error('Lỗi khi xóa gói:', error);
+    }
+  };
+
   const handleSaveEdit = async () => {
     if (!editPlan) return;
-
-    console.log("///editPlan///")
-    console.log(editPlan)
-    console.log("///editPlan///")
 
     try {
       const response = await fetch(`http://10.0.2.2:8080/api/membership-plans/update-mbplan/${editPlan.id}`, {
@@ -127,7 +189,7 @@ export default function HomeScreen() {
                 <TouchableOpacity style={styles.editButton} onPress={() => handleEditPress(item)}>
                   <FontAwesome name="edit" size={20} color="#fff"/>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.deleteButton}>
+                <TouchableOpacity style={styles.deleteButton} onPress={() => handleDeleteConfirmation(item.id)}>
                   <FontAwesome name="trash" size={20} color="#fff"/>
                 </TouchableOpacity>
               </View>
@@ -136,10 +198,12 @@ export default function HomeScreen() {
         )}
         contentContainerStyle={styles.listContent}
       />
+
+
       <Modal visible={modalVisible} transparent={true} animationType="slide">
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Chỉnh sửa gói</Text>
+            <Text style={styles.modalTitle}></Text>
             <TextInput
               style={styles.input}
               placeholder="Tên gói"
@@ -163,10 +227,12 @@ export default function HomeScreen() {
               style={styles.input}
               placeholder="Thời gian"
               keyboardType="numeric"
-              value={editPlan?.timeInDay ? editPlan.timeInDay.toString() : ""}
-              onChangeText={(text) => setEditPlan(prev => prev ? {...prev, timeInDay: text ? parseInt(text, 10) : 0} : null)}
+              value={editPlan?.timeInDay.toString()}
+              onChangeText={(text) => setEditPlan(prev => prev ? {
+                ...prev,
+                timeInDay: text ? parseInt(text) : 0
+              } : null)}
             />
-          
 
             <TextInput
               style={styles.input}
@@ -210,11 +276,34 @@ export default function HomeScreen() {
           </View>
         </View>
       </Modal>
+      {user.roles.includes("ROLE_ADMIN") && (
+        <TouchableOpacity style={styles.fab} onPress={() => handldCreatPress()}>
+          <FontAwesome name="plus" size={24} color="#fff"/>
+        </TouchableOpacity>
+      )}
     </View>
   );
 }
 
+
 const styles = StyleSheet.create({
+  fab: {
+    position: "absolute",
+    right: 20,
+    bottom: 20,
+    backgroundColor: "#007AFF",
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
+    elevation: 5,
+  },
+
   container: {
     flex: 1,
     backgroundColor: '#fff',
