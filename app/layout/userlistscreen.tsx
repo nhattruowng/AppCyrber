@@ -134,7 +134,7 @@ export default function UserListScreen() {
         );
     } catch (err) {
       console.error("Toggle error:", err);
-      alert(err.message || "Đã xảy ra lỗi khi thay đổi trạng thái người dùng");
+      alert( "Đã xảy ra lỗi khi thay đổi trạng thái người dùng");
     } finally {
       setIsLoading(false);
       setModalVisible(false);
@@ -211,6 +211,7 @@ export default function UserListScreen() {
           </View>
         </View>
       </Modal>
+
     </View>
   );
 }
