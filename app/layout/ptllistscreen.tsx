@@ -4,24 +4,72 @@ import {
     ScrollView,
     StyleSheet,
     TouchableOpacity,
-    TextInput,
+    TextInput, Alert,
 } from "react-native";
 import Modal from "react-native-modal";
-import { useSelector } from "react-redux";
-import { useState, useEffect } from "react";
+import {useSelector} from "react-redux";
+import {useState, useEffect} from "react";
+import {RootState} from "@/app/redux/store";
+import {Picker} from "@react-native-picker/picker"; // Thêm Picker
 
 const API_URL = "http://10.0.2.2:8080/api/trainers";
 
+interface PT {
+    id: string;
+    email: string;
+    phone: string;
+    status: string;
+    enable: boolean;
+}
+
 export default function VehicleManagementScreen() {
-    const [vehicles, setVehicles] = useState([]);
+    const [vehicles, setVehicles] = useState<PT[]>([]);
+
     const [newEmail, setNewEmail] = useState("");
-    const [selectedVehicle, setSelectedVehicle] = useState(null);
+    const [specialization, setSpecialization] = useState(""); // Thêm state cho specialization
+    const [experienceYear, setExperienceYear] = useState(0);
+
+    const [isLoading, setIsLoading] = useState<boolean>(false);
+
+
+    const [selectedVehicle, setSelectedVehicle] = useState<PT | null>(null);
     const [isAddModalVisible, setAddModalVisible] = useState(false);
     const [isLockModalVisible, setLockModalVisible] = useState(false);
-    const user = useSelector((state) => state.user);
+    const user = useSelector((state: RootState) => state.user);
     const [loading, setLoading] = useState(true);
+    const [isProcessing, setIsProcessing] = useState(false);
 
-    // Lấy danh sách PT từ API
+
+    // Hàm thêm PT
+    const addTrainers = async (email: string) => {
+        setIsLoading(true);
+        try {
+            const response = await fetch(`${API_URL}?email=${encodeURIComponent(email)}`, {
+                method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${user.token}`,
+                    "Accept": "application/json",
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    specialization,
+                    experienceYear
+                }),
+            });
+            if (response.status !== 200) {
+                Alert.alert("Tap Pt voi email: ", `${email} that bai!`);
+            }
+
+            return response;
+        } catch (error) {
+            Alert.alert("Tap Pt voi email: ", `${email} that bai!`);
+        } finally {
+            setIsLoading(false);
+            setAddModalVisible(true);
+        }
+    };
+
+    // Lấy danh sách PT
     const fetchTrainers = async () => {
         try {
             const response = await fetch(`${API_URL}/list-all`, {
@@ -31,8 +79,10 @@ export default function VehicleManagementScreen() {
                 },
             });
             const result = await response.json();
+
             if (result.httpStatus === "OK") {
-                setVehicles(result.data);
+                const userData = Array.isArray(result.data) ? result.data : result;
+                setVehicles(userData);
             }
         } catch (error) {
             console.error("Lỗi khi lấy danh sách trainers:", error);
@@ -41,45 +91,46 @@ export default function VehicleManagementScreen() {
         }
     };
 
+
     // Xử lý thêm PT
     const handleAddVehicle = async () => {
-        if (newEmail.trim() === "") return;
+        if (newEmail.trim() === "" || specialization.trim() === "") return;
         try {
-            const response = await fetch(`${API_URL}/add`, {
-                method: "POST",
-                headers: {
-                    "Authorization": `Bearer ${user.token}`,
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({ email: newEmail }),
-            });
-            if (response.ok) {
-                fetchTrainers();
-            }
+            await addTrainers(newEmail); // Gọi hàm addTrainers
+            await fetchTrainers(); // Cập nhật danh sách
+            setNewEmail("");
+            setSpecialization(""); // Reset specialization
+            setExperienceYear(0);
+            setAddModalVisible(false);
         } catch (error) {
             console.error("Lỗi khi thêm PT:", error);
         }
-        setNewEmail("");
-        setAddModalVisible(false);
     };
 
     // Xử lý khóa/mở khóa PT
     const handleLockVehicle = async () => {
         if (!selectedVehicle) return;
+        setIsProcessing(true);
         try {
-            const response = await fetch(`${API_URL}/lock/${selectedVehicle.id}`, {
-                method: "PATCH",
+            const response = await fetch(`${API_URL}/${selectedVehicle.id}`, {
+                method: "DELETE",
                 headers: {
                     "Authorization": `Bearer ${user.token}`,
+                    "Content-Type": "application/json",
                 },
             });
             if (response.ok) {
-                fetchTrainers();
+                await fetchTrainers();
+            } else {
+                Alert.alert("Lỗi", "Không thể cập nhật trạng thái PT.");
             }
         } catch (error) {
             console.error("Lỗi khi cập nhật trạng thái khóa:", error);
+            Alert.alert("Lỗi", "Có lỗi xảy ra khi cập nhật trạng thái.");
+        } finally {
+            setIsProcessing(false);
+            setLockModalVisible(false);
         }
-        setLockModalVisible(false);
     };
 
     useEffect(() => {
@@ -88,148 +139,309 @@ export default function VehicleManagementScreen() {
 
     return (
         <View style={styles.container}>
-            <TouchableOpacity style={styles.addButton} onPress={() => setAddModalVisible(true)}>
-                <Text style={styles.addButtonText}>➕ Thêm PT</Text>
-            </TouchableOpacity>
-            <ScrollView>
-                {vehicles.length === 0 ? (
-                    <Text style={{ textAlign: 'center', marginTop: 20 }}>Không có PT nào.</Text>
+            {/* Header */}
+            <View style={styles.header}>
+
+                <TouchableOpacity
+                    style={styles.addButton}
+                    onPress={() => setAddModalVisible(true)}
+                >
+                    <Text style={styles.addButtonText}>+ Thêm PT</Text>
+                </TouchableOpacity>
+            </View>
+
+            {/* List */}
+            <ScrollView style={styles.listContainer}>
+                {loading ? (
+                    <Text style={styles.emptyText}>Đang tải...</Text>
+                ) : vehicles.length === 0 ? (
+                    <Text style={styles.emptyText}>Không có PT nào.</Text>
                 ) : (
                     vehicles.map((vehicle) => (
                         <View key={vehicle.id} style={styles.vehicleItem}>
-                            <Text style={styles.vehicleText}>
-                                {vehicle.email} {vehicle.locked ? "(Đã khóa)" : ""}
-                            </Text>
+                            <View style={styles.vehicleInfo}>
+                                <Text style={styles.vehicleEmail}>{vehicle.email}</Text>
+                                <Text
+                                    style={[
+                                        styles.vehicleStatus,
+                                        {color: !vehicle.status ? "#28a745" : "#ff4444"},
+                                    ]}
+                                >
+                                    Hoạt động:
+                                    {!vehicle.status ? "✅" : "❌"}
+                                </Text>
+                                <Text>sdt: {vehicle?.phone === null ? "" : vehicle.phone}</Text>
+                            </View>
                             <TouchableOpacity
-                                style={styles.lockButton}
+                                style={[
+                                    styles.lockButton,
+                                    {
+                                        backgroundColor: !vehicle.enable ? "#ff4444" : "#28a745",
+                                    },
+                                ]}
                                 onPress={() => {
                                     setSelectedVehicle(vehicle);
                                     setLockModalVisible(true);
                                 }}
+                                disabled={isProcessing && selectedVehicle?.id === vehicle.id}
                             >
-                                <Text style={styles.lockText}>{vehicle.locked ? "🔓 Mở khóa" : "🔒 Khóa"}</Text>
+                                <Text style={styles.lockButtonText}>
+                                    {isProcessing && selectedVehicle?.id === vehicle.id
+                                        ? "Đang xử lý..."
+                                        : !vehicle.enable
+                                            ? "Khóa"
+                                            : "Mở khóa"}
+                                </Text>
                             </TouchableOpacity>
                         </View>
                     ))
                 )}
             </ScrollView>
-            <Modal isVisible={isAddModalVisible} onBackdropPress={() => setAddModalVisible(false)}>
+
+            {/* Lock Modal */}
+            <Modal
+                isVisible={isAddModalVisible}
+                //                onBackdropPress={() => setAddModalVisible(false)}
+            >
                 <View style={styles.modalContainer}>
-                    <Text style={styles.modalTitle}>Thêm PT</Text>
+                    <Text style={styles.modalTitle}>Thêm PT Mới</Text>
                     <TextInput
                         style={styles.input}
-                        placeholder="Nhập email"
+                        placeholder="Nhập email PT"
                         value={newEmail}
                         onChangeText={setNewEmail}
+                        autoCapitalize="none"
                     />
+                    <TextInput
+                        style={[
+                            styles.input,
+                            specialization.trim() === "" && styles.inputError,
+                        ]}
+                        placeholder="Nhập chuyên môn"
+                        value={specialization}
+                        onChangeText={setSpecialization}
+                    />
+                    <View style={styles.pickerContainer}>
+                        <Picker
+                            selectedValue={experienceYear}
+                            onValueChange={(itemValue) => setExperienceYear(itemValue)}
+                            style={styles.picker}
+                        >
+                            {Array.from({length: 51}, (_, i) => i).map((year) => (
+                                <Picker.Item
+                                    key={year}
+                                    label={`${year} năm`}
+                                    value={year}
+                                />
+                            ))}
+                        </Picker>
+                    </View>
                     <View style={styles.modalActions}>
-                        <TouchableOpacity style={styles.cancelButton} onPress={() => setAddModalVisible(false)}>
-                            <Text>Hủy</Text>
+                        <TouchableOpacity
+                            style={styles.modalButton}
+                            onPress={() => setAddModalVisible(false)}
+                        >
+                            <Text style={styles.cancelText}>Hủy</Text>
                         </TouchableOpacity>
-                        <TouchableOpacity style={styles.confirmButton} onPress={handleAddVehicle}>
-                            <Text style={{ color: "#fff" }}>Xác nhận</Text>
+                        <TouchableOpacity
+                            style={[styles.modalButton, styles.confirmButton]}
+                            onPress={handleAddVehicle}
+                            disabled={isLoading}
+                        >
+                            <Text style={styles.confirmText}>
+                                {isLoading ? "Đang xử lý..." :
+                                    "Thêm"}
+                            </Text>
                         </TouchableOpacity>
                     </View>
                 </View>
             </Modal>
-            <Modal isVisible={isLockModalVisible} onBackdropPress={() => setLockModalVisible(false)}>
+
+
+            <Modal
+                isVisible={isLockModalVisible}
+                onBackdropPress={() => setLockModalVisible(false)}
+            >
                 <View style={styles.modalContainer}>
-                    <Text style={styles.modalTitle}>Xác nhận khóa</Text>
+                    <Text style={styles.modalTitle}>
+                        {selectedVehicle?.enable ? "Mở khóa" : "Khóa"} PT
+                    </Text>
                     <Text style={styles.modalMessage}>
-                        Bạn có chắc muốn {selectedVehicle?.locked ? "mở khóa" : "khóa"} PT "{selectedVehicle?.email}" không?
+                        Bạn có chắc muốn {selectedVehicle?.enable ? "mở khóa" : "khóa"} PT{" "}
+                        {selectedVehicle?.email} không?
                     </Text>
                     <View style={styles.modalActions}>
-                        <TouchableOpacity style={styles.cancelButton} onPress={() => setLockModalVisible(false)}>
-                            <Text>Hủy</Text>
+                        <TouchableOpacity
+                            style={styles.modalButton}
+                            onPress={() => setLockModalVisible(false)}
+                            disabled={isProcessing}
+                        >
+                            <Text style={styles.cancelText}>Hủy</Text>
                         </TouchableOpacity>
-                        <TouchableOpacity style={styles.confirmButton} onPress={handleLockVehicle}>
-                            <Text style={{ color: "#fff" }}>{selectedVehicle?.locked ? "Mở khóa" : "Khóa"}</Text>
+                        <TouchableOpacity
+                            style={[styles.modalButton, styles.confirmButton]}
+                            onPress={handleLockVehicle}
+                            disabled={isProcessing}
+                        >
+                            <Text style={styles.confirmText}>
+                                {isProcessing ? "Đang xử lý..." : "Xác nhận"}
+                            </Text>
                         </TouchableOpacity>
                     </View>
                 </View>
             </Modal>
+
         </View>
     );
 }
 
-
 const styles = StyleSheet.create({
+    pickerContainer: {
+        borderWidth: 1,
+        borderColor: "#ddd",
+        borderRadius: 8,
+        marginBottom: 15,
+        backgroundColor: "#fafafa",
+    },
+    picker: {
+        height: 50,
+        width: "100%",
+    },
+    inputError: {
+        borderWidth: 1,
+        borderRadius: 8,
+        padding: 12,
+        marginBottom: 15,
+        fontSize: 16,
+        backgroundColor: "#fafafa",
+        borderColor: "red",
+    },
     container: {
         flex: 1,
-        padding: 20,
         backgroundColor: "#f5f5f5",
     },
-    title: {
-        fontSize: 20,
-        fontWeight: "bold",
-        marginBottom: 10,
-    },
-    addButton: {
-        padding: 12,
-        backgroundColor: "#007bff",
-        borderRadius: 8,
-        alignItems: "center",
-        marginBottom: 10,
-    },
-    addButtonText: {
-        color: "#fff",
-        fontWeight: "bold",
-    },
-    vehicleItem: {
-        backgroundColor: "#fff",
-        padding: 12,
-        borderRadius: 8,
-        marginBottom: 10,
+    header: {
         flexDirection: "row",
         justifyContent: "space-between",
         alignItems: "center",
+        padding: 15,
+        backgroundColor: "#fff",
+        borderBottomWidth: 1,
+        borderBottomColor: "#eee",
     },
-    vehicleText: {
+    headerTitle: {
+        fontSize: 20,
+        fontWeight: "bold",
+        color: "#333",
+    },
+    addButton: {
+        backgroundColor: "#007bff",
+        paddingVertical: 8,
+        paddingHorizontal: 15,
+        borderRadius: 20,
+    },
+    addButtonText: {
+        color: "#fff",
         fontSize: 16,
+        fontWeight: "600",
+    },
+    listContainer: {
+        flex: 1,
+        padding: 15,
+    },
+    vehicleItem: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+        backgroundColor: "#fff",
+        padding: 15,
+        borderRadius: 10,
+        marginBottom: 10,
+        elevation: 2,
+        shadowColor: "#000",
+        shadowOffset: {width: 0, height: 1},
+        shadowOpacity: 0.1,
+        shadowRadius: 2,
+    },
+    vehicleInfo: {
+        flex: 1,
+    },
+    vehicleEmail: {
+        fontSize: 16,
+        color: "#333",
+        fontWeight: "500",
+    },
+    vehicleStatus: {
+        fontSize: 14,
+        marginTop: 2,
     },
     lockButton: {
-        padding: 10,
+        paddingVertical: 8,
+        paddingHorizontal: 15,
+        borderRadius: 20,
     },
-    lockText: {
+    lockButtonText: {
+        color: "#fff",
+        fontSize: 14,
+        fontWeight: "600",
+    },
+    emptyText: {
+        textAlign: "center",
+        color: "#666",
         fontSize: 16,
-        color: "red",
+        marginTop: 20,
     },
     modalContainer: {
         backgroundColor: "#fff",
         padding: 20,
-        borderRadius: 10,
-        alignItems: "center",
+        borderRadius: 15,
+        marginHorizontal: 20,
     },
     modalTitle: {
-        fontSize: 18,
+        fontSize: 20,
         fontWeight: "bold",
-        marginBottom: 10,
+        color: "#333",
+        textAlign: "center",
+        marginBottom: 15,
     },
     modalMessage: {
         fontSize: 16,
+        color: "#666",
+        textAlign: "center",
         marginBottom: 20,
     },
     input: {
         borderWidth: 1,
-        borderColor: "#ccc",
-        borderRadius: 5,
-        width: "100%",
-        padding: 10,
-        marginBottom: 10,
+        borderColor: "#ddd",
+        borderRadius: 8,
+        padding: 12,
+        marginBottom: 15,
+        fontSize: 16,
+        backgroundColor: "#fafafa",
     },
     modalActions: {
         flexDirection: "row",
-        justifyContent: "space-around",
-        width: "100%",
+        justifyContent: "space-between",
+        gap: 10,
     },
-    cancelButton: {
-        padding: 10,
-        backgroundColor: "#ddd",
-        borderRadius: 5,
+    modalButton: {
+        flex: 1,
+        padding: 12,
+        borderRadius: 8,
+        alignItems: "center",
+        backgroundColor: "#f0f0f0",
     },
     confirmButton: {
-        padding: 10,
-        backgroundColor: "#ff4444",
-        borderRadius: 5,
+        backgroundColor: "#007bff",
+    },
+    cancelText: {
+        color: "#666",
+        fontSize: 16,
+        fontWeight: "500",
+    },
+    confirmText: {
+        color: "#fff",
+        fontSize: 16,
+        fontWeight: "600",
     },
 });

@@ -44,6 +44,7 @@ export default function RootLayout() {
                     <Stack.Screen name="authen/register" options={{headerShown: false}}/>
                     <Stack.Screen name="layout/userlistscreen" options={{headerShown: false}}/>
                     <Stack.Screen name="layout/ptllistscreen" options={{headerShown: false}}/>
+                    <Stack.Screen name="layout/addservice" options={{headerShown: false}}/>
                     <Stack.Screen name="+not-found"/>
                 </Stack>
                 <StatusBar style="auto"/>

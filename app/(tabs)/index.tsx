@@ -4,10 +4,11 @@ import {HelloWave} from '@/components/HelloWave';
 import {ThemedText} from '@/components/ThemedText';
 import {ThemedView} from '@/components/ThemedView';
 import axios from 'axios';
-import {useSelector} from "react-redux";
 import {RootState} from "@/app/redux/store";
 import {FontAwesome} from "@expo/vector-icons";
 import DatePicker from 'react-native-date-picker';
+import {useRouter} from "expo-router";
+
 
 interface MembershipPlan {
   id: string;
@@ -21,6 +22,8 @@ interface MembershipPlan {
 
 export default function HomeScreen() {
   const user = useSelector((state: RootState) => state.user);
+  const router = useRouter();
+
 
   const [plans, setPlans] = useState<MembershipPlan[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -37,7 +40,7 @@ export default function HomeScreen() {
   useEffect(() => {
     const fetchPlans = async () => {
       try {
-        const response = await fetch('http://10.0.2.2:8080/api/membership-plans/all', {
+        const response = await fetch('http://10.0.2.2:8080/api/membership-plan/all', {
           headers: {Accept: '*/*'},
         });
 
@@ -93,11 +96,6 @@ export default function HomeScreen() {
     setModalVisible(true);
   };
 
-  const handldCreatPress = () => {
-    setEditPlan(null);
-    setModalVisible(true);
-    setCreact(true);
-  };
 
   const handleDeleteConfirmation = (planId: string) => {
     Alert.alert(
@@ -111,7 +109,7 @@ export default function HomeScreen() {
   };
   const handleDeletePlan = async (planId: string) => {
     try {
-      const response = await fetch(`http://10.0.2.2:8080/api/membership-plans/delete-mbplan/${planId}`, {
+      const response = await fetch(`http://10.0.2.2:8080/api/membership-plan/delete/${planId}`, {
         method: 'DELETE',
         headers: {
           'Accept': '*/*',
@@ -132,7 +130,7 @@ export default function HomeScreen() {
     if (!editPlan) return;
 
     try {
-      const response = await fetch(`http://10.0.2.2:8080/api/membership-plans/update-mbplan/${editPlan.id}`, {
+      const response = await fetch(`http://10.0.2.2:8080/api/membership-plans/update/${editPlan.id}`, {
         method: 'PUT',
         headers: {
           'Accept': '*/*',
@@ -155,6 +153,9 @@ export default function HomeScreen() {
     }
   };
 
+  const addpage = () => {
+      router.push("/layout/addservice")
+  }
 
   if (loading) {
     return (
@@ -277,7 +278,7 @@ export default function HomeScreen() {
         </View>
       </Modal>
       {user.roles.includes("ROLE_ADMIN") && (
-        <TouchableOpacity style={styles.fab} onPress={() => handldCreatPress()}>
+        <TouchableOpacity style={styles.fab} onPress={addpage}>
           <FontAwesome name="plus" size={24} color="#fff"/>
         </TouchableOpacity>
       )}
