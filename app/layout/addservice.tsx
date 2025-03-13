@@ -47,6 +47,9 @@ const AddMembershipPlanScreen = () => {
     const router = useRouter();
 
 
+    const indexpage =() =>{
+        router.push("/index");
+    }
 
     const addService = async (): Promise<boolean> => {
         setIsLoading(true);
@@ -94,7 +97,7 @@ const AddMembershipPlanScreen = () => {
                 timeInDay: 1,
             });
             Alert.alert("Thành công", "Gói thành viên đã được thêm!");
-            router.push("/index");
+
         }
     };
 

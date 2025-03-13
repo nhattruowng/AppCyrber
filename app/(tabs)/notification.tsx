@@ -18,20 +18,6 @@ const NotificationItem: React.FC<NotificationItemProps> = ({ name, message, star
                 <Text style={styles.profileName}>{name}</Text>
             </View>
             <Text style={styles.notificationText}>{message}</Text>
-            {/*<View style={styles.statsContainer}>*/}
-            {/*    <View style={styles.statItem}>*/}
-            {/*        <Ionicons name="star" size={16} color="#fdd835" />*/}
-            {/*        <Text style={styles.statText}>{stars.toLocaleString()}</Text>*/}
-            {/*    </View>*/}
-            {/*    <View style={styles.statItem}>*/}
-            {/*        <Ionicons name="chatbox" size={16} color="#29b6f6" />*/}
-            {/*        <Text style={styles.statText}>{comments.toLocaleString()}</Text>*/}
-            {/*    </View>*/}
-            {/*    <View style={styles.statItem}>*/}
-            {/*        <Ionicons name="eye" size={16} color="#66bb6a" />*/}
-            {/*        <Text style={styles.statText}>{views.toLocaleString()}</Text>*/}
-            {/*    </View>*/}
-            {/*</View>*/}
         </View>
     );
 };

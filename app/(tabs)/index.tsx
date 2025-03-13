@@ -8,6 +8,8 @@ import {RootState} from "@/app/redux/store";
 import {FontAwesome} from "@expo/vector-icons";
 import DatePicker from 'react-native-date-picker';
 import {useRouter} from "expo-router";
+import {useSelector} from "react-redux";
+
 
 
 interface MembershipPlan {
