@@ -42,7 +42,7 @@ export default function HomeScreen() {
   useEffect(() => {
     const fetchPlans = async () => {
       try {
-        const response = await fetch('http://10.0.2.2:8080/api/membership-plan/all', {
+        const response = await fetch('https://testupoadserver-fmbxg7epg4gscxb6.canadacentral-01.azurewebsites.net/api/membership-plan/all', {
           headers: {Accept: '*/*'},
         });
 
@@ -66,7 +66,7 @@ export default function HomeScreen() {
     if (!editPlan) return;
 
     try {
-      const response = await fetch('http://10.0.2.2:8080/api/membership-plans/add-plan', {
+      const response = await fetch('https://testupoadserver-fmbxg7epg4gscxb6.canadacentral-01.azurewebsites.net/api/membership-plan', {
         method: 'POST',
         headers: {
           'Accept': '*/*',
@@ -111,7 +111,7 @@ export default function HomeScreen() {
   };
   const handleDeletePlan = async (planId: string) => {
     try {
-      const response = await fetch(`http://10.0.2.2:8080/api/membership-plan/delete/${planId}`, {
+      const response = await fetch(`https://testupoadserver-fmbxg7epg4gscxb6.canadacentral-01.azurewebsites.net/api/membership-plan/delete/${planId}`, {
         method: 'DELETE',
         headers: {
           'Accept': '*/*',
@@ -132,7 +132,7 @@ export default function HomeScreen() {
     if (!editPlan) return;
 
     try {
-      const response = await fetch(`http://10.0.2.2:8080/api/membership-plans/update/${editPlan.id}`, {
+      const response = await fetch(`https://testupoadserver-fmbxg7epg4gscxb6.canadacentral-01.azurewebsites.net/api/membership-plan/update/${editPlan.id}`, {
         method: 'PUT',
         headers: {
           'Accept': '*/*',

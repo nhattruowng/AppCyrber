@@ -28,7 +28,7 @@ interface MembershipPlan {
     timeInDay: number;
 }
 
-const API_URL = "http://10.0.2.2:8080/api/membership-plan/add-plan";
+const API_URL = "https://testupoadserver-fmbxg7epg4gscxb6.canadacentral-01.azurewebsites.net/api/membership-plan";
 
 const AddMembershipPlanScreen = () => {
     const [plan, setPlan] = useState<MembershipPlan>({

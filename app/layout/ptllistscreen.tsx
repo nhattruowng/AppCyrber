@@ -12,7 +12,7 @@ import {useState, useEffect} from "react";
 import {RootState} from "@/app/redux/store";
 import {Picker} from "@react-native-picker/picker"; // Thêm Picker
 
-const API_URL = "http://10.0.2.2:8080/api/trainers";
+const API_URL = "https://testupoadserver-fmbxg7epg4gscxb6.canadacentral-01.azurewebsites.net/api/trainers";
 
 interface PT {
     id: string;
@@ -112,7 +112,7 @@ export default function VehicleManagementScreen() {
         if (!selectedVehicle) return;
         setIsProcessing(true);
         try {
-            const response = await fetch(`${API_URL}/${selectedVehicle.id}`, {
+            const response = await fetch(`${API_URL}/trainer-lock/${selectedVehicle.id}`, {
                 method: "DELETE",
                 headers: {
                     "Authorization": `Bearer ${user.token}`,
@@ -164,11 +164,11 @@ export default function VehicleManagementScreen() {
                                 <Text
                                     style={[
                                         styles.vehicleStatus,
-                                        {color: !vehicle.status ? "#28a745" : "#ff4444"},
+                                        {color: vehicle.status ? "#28a745" : "#ff4444"},
                                     ]}
                                 >
                                     Hoạt động:
-                                    {!vehicle.status ? "✅" : "❌"}
+                                    {vehicle.status ? "✅" : "❌"}
                                 </Text>
                                 <Text>sdt: {vehicle?.phone === null ? "" : vehicle.phone}</Text>
                             </View>

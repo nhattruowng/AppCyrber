@@ -13,32 +13,8 @@ interface User {
 }
 
 
-const mockUserDetails = {
-  id: 1,
-  name: "Nguyễn Văn A",
-  email: "nguyenvana@gmail.com",
-  enable: true,
-  details: [
-    {
-      title: "Thông tin cá nhân",
-      items: [
-        { label: "Số điện thoại", value: "0123 456 789" },
-        { label: "Ngày sinh", value: "15/03/1990" },
-        { label: "Địa chỉ", value: "123 Đường Láng, Hà Nội" },
-      ]
-    },
-    {
-      title: "Thông tin tài khoản",
-      items: [
-        { label: "Ngày tạo", value: "01/01/2023" },
-        { label: "Lần đăng nhập cuối", value: "10/03/2025" },
-      ]
-    }
-  ]
-};
-
-const API_URL = "http://10.0.2.2:8080/api/authen/get-all";
-const TOGGLE_URL = "http://10.0.2.2:8080/api/authen/delete"; // Sử dụng chung URL cho toggle
+const API_URL = "https://testupoadserver-fmbxg7epg4gscxb6.canadacentral-01.azurewebsites.net/api/users/all";
+const TOGGLE_URL = "https://testupoadserver-fmbxg7epg4gscxb6.canadacentral-01.azurewebsites.net/api/users/delete"; // Sử dụng chung URL cho toggle
 
 export default function UserListScreen() {
   const [users, setUsers] = useState<User[]>([]);

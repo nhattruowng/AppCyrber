@@ -1,4 +1,4 @@
-import {StyleSheet, TouchableOpacity, View, Text, TextInput, Dimensions, Image, Modal} from 'react-native';
+import {StyleSheet, TouchableOpacity, View, Text, TextInput, Dimensions, Image, Modal, Alert} from 'react-native';
 import React, {useEffect, useState} from 'react';
 import {Ionicons} from "@expo/vector-icons";
 import {setUser} from '../redux/userSlice'
@@ -16,6 +16,8 @@ GoogleSignin.configure({
     offlineAccess: true,
 });
 
+
+
 const LoginScreen = () => {
     const user = useSelector((state: RootState) => state.user);
     const router = useRouter();
@@ -28,8 +30,8 @@ const LoginScreen = () => {
 
     const [userstore, setUserStore] = useState<any>(null);
 
-
     const [forgotPasswordVisible, setForgotPasswordVisible] = useState(false);
+
 
 
     useEffect(() => {
@@ -82,13 +84,17 @@ const LoginScreen = () => {
 //                },
 //                body: JSON.stringify({email, password}),
 //            });
-            const response = await fetch('http://10.0.2.2:8080/api/authen/login', {
+            const response = await fetch('https://testupoadserver-fmbxg7epg4gscxb6.canadacentral-01.azurewebsites.net/api/users/login', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({email, password}),
             });
+
+            console.log(email)
+            console.log(password)
+
             if (!response.ok) {
                 throw new Error('Đăng nhập thất bại');
             }
@@ -135,7 +141,7 @@ const LoginScreen = () => {
             // Lấy Firebase ID Token
             const idToken = await firebaseUserCredential.user.getIdToken(true);
 
-            const response = await fetch("https://gymbe-production-233d.up.railway.app/api/authen/firebase-login", {
+            const response = await fetch("https://testupoadserver-fmbxg7epg4gscxb6.canadacentral-01.azurewebsites.net/api/users/firebase-login", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -244,15 +250,78 @@ const ForgotPasswordDialog = ({visible, onClose}) => {
     const [newPassword, setNewPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
     const [showFields, setShowFields] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
+    const [isCodeSent, setIsCodeSent] = useState(false); // Kiểm soát nút gửi mã
 
-    const handleSendCode = () => {
-        if (resetEmail) {
-            setShowFields(true);
+    const handClost = () => {
+        setResetEmail("");
+        setVerificationCode("");
+        setNewPassword("");
+        setConfirmPassword("");
+        setIsCodeSent(false);
+        setShowFields(false)
+        onClose();
+    }
+
+    const handChangePass = async () => {
+        if (!verificationCode) {
+            Alert.alert("Vui lòng nhập mã xác.");
+            return;
         }
-    };
+        if (newPassword !== confirmPassword) {
+            Alert.alert("Mật khẩu không khớp!");
+            return;
+        }
+        setIsLoading(true);
+        try {
+            const response = await fetch(`https://testupoadserver-fmbxg7epg4gscxb6.canadacentral-01.azurewebsites.net/api/users/sendmail/${resetEmail}/${verificationCode}`, {
+                body: JSON.stringify({newPassword: newPassword}),
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            })
+            console.log(response)
+            if (response.status === 200) {
+                setShowFields(true);
+                setIsCodeSent(true);
+                handClost();
+            } else {
+                Alert.alert("Email không đúng hoặc tài khoản chưa tồn tại.");
+            }
 
-    const handleResetPassword = () => {
-        // Logic đặt lại mật khẩu
+        } catch (e) {
+            Alert.alert("Lỗi kết nối, vui lòng thử lại.");
+        } finally {
+            setIsLoading(false);
+            handClost();
+        }
+    }
+
+    const handleSendCode = async () => {
+        if (!resetEmail) {
+            Alert.alert("Vui lòng nhập email.");
+            return;
+        }
+        setIsLoading(true);
+        try {
+            const response = await fetch(`https://testupoadserver-fmbxg7epg4gscxb6.canadacentral-01.azurewebsites.net/api/users/sendmail/${resetEmail}`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            });
+            if (response.status === 200) {
+                setShowFields(true);
+                setIsCodeSent(true);
+            } else {
+                Alert.alert("Email không đúng hoặc tài khoản chưa tồn tại.");
+            }
+        } catch (error) {
+            Alert.alert("Lỗi kết nối, vui lòng thử lại.");
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
@@ -262,9 +331,16 @@ const ForgotPasswordDialog = ({visible, onClose}) => {
                     <Text style={styles.modalTitle}>Quên Mật Khẩu</Text>
                     <TextInput style={styles.input} placeholder="Email" value={resetEmail}
                                onChangeText={setResetEmail}/>
-                    <TouchableOpacity style={styles.button} onPress={handleSendCode}>
-                        <Text style={styles.buttonText}>Gửi mã</Text>
-                    </TouchableOpacity>
+
+                    {/* Chỉ ẩn khi API gửi thành công */}
+                    {!isCodeSent && (
+                        <TouchableOpacity style={styles.button} onPress={handleSendCode}>
+                            <Text style={styles.buttonText}>
+                                {isLoading ? "Đang gửi mã..." : "Gửi mã"}
+                            </Text>
+                        </TouchableOpacity>
+                    )}
+
                     {showFields && (
                         <>
                             <TextInput style={styles.input} placeholder="Mã xác nhận" value={verificationCode}
@@ -273,12 +349,17 @@ const ForgotPasswordDialog = ({visible, onClose}) => {
                                        value={newPassword} onChangeText={setNewPassword}/>
                             <TextInput style={styles.input} placeholder="Xác nhận mật khẩu" secureTextEntry
                                        value={confirmPassword} onChangeText={setConfirmPassword}/>
-                            <TouchableOpacity style={styles.button}>
-                                <Text style={styles.buttonText}>Xác nhận</Text>
+                            <TouchableOpacity style={styles.button}
+                                              onPress={() => handChangePass()}
+                            >
+                                <Text style={styles.buttonText}>
+                                    {isLoading ? "Đang sử lý..." : "Xác nhận"}
+                                </Text>
                             </TouchableOpacity>
                         </>
                     )}
-                    <TouchableOpacity onPress={onClose}>
+
+                    <TouchableOpacity onPress={() => handClost()}>
                         <Text style={styles.closeText}>Đóng</Text>
                     </TouchableOpacity>
                 </View>

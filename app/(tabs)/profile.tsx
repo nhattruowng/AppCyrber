@@ -68,7 +68,7 @@ export default function ProfileScreen() {
     setIsLoading(true);
     try {
       const response = await fetch(
-        `http://10.0.2.2:8080/api/authen/edit/${user.id}/${field === "name" ? "Name" : "Phone"}?content=${encodeURIComponent(value)}`,
+        `https://testupoadserver-fmbxg7epg4gscxb6.canadacentral-01.azurewebsites.net/api/users/edit/${user.id}/${field === "name" ? "Name" : "Phone"}?content=${encodeURIComponent(value)}`,
         {
           method: "PUT",
           headers: {

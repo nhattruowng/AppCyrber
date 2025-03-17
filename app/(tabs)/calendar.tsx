@@ -4,6 +4,11 @@ import {Calendar, LocaleConfig} from "react-native-calendars";
 import moment from "moment";
 import "moment/locale/vi";
 import {Picker} from "@react-native-picker/picker";
+import {RootState} from "@/app/redux/store";
+import {useSelector} from "react-redux";
+
+
+const API_URL = "https://testupoadserver-fmbxg7epg4gscxb6.canadacentral-01.azurewebsites.net/api/trainers";
 
 LocaleConfig.locales["vi"] = {
     monthNames: [
@@ -16,6 +21,15 @@ LocaleConfig.locales["vi"] = {
 };
 LocaleConfig.defaultLocale = "vi";
 
+
+interface PT {
+    id: string;
+    email: string;
+    phone: string;
+    status: string;
+    enable: boolean;
+}
+
 export default function CalendarScreen() {
     const [selectedDate, setSelectedDate] = useState("");
     const [selectedItem, setSelectedItem] = useState(null);
@@ -23,9 +37,36 @@ export default function CalendarScreen() {
     const [selectedTime, setSelectedTime] = useState(null);
     const [selectedPT, setSelectedPT] = useState(null);
     const [availableTimes, setAvailableTimes] = useState([]);
+    const user = useSelector((state: RootState) => state.user);
+
 
     const apiDuration = 15; // Thời gian khả dụng là 15 tiếng tính từ 6h sáng
     const startHour = 6; // Bắt đầu từ 6h sáng
+
+    const [availablePTs, setAvailablePTs] = useState<PT[]>([]);
+
+    useEffect(() => {
+        const fetchTrainers = async () => {
+            try {
+                const response = await fetch(`${API_URL}/list-all`, {
+                    headers: {
+                        "Authorization": `Bearer ${user.token}`,
+                        "Accept": "application/json",
+                    },
+                });
+                const result = await response.json();
+                if (result.httpStatus === "OK") {
+                    const userData = Array.isArray(result.data) ? result.data : result;
+                    setAvailablePTs(userData);
+                }
+            } catch (error) {
+                console.error("Lỗi khi lấy danh sách trainers:", error);
+            } finally {
+            }
+        };
+        fetchTrainers();
+    }, []);
+
 
     useEffect(() => {
         const currentHour = new Date().getHours();
@@ -40,11 +81,6 @@ export default function CalendarScreen() {
         setAvailableTimes(times);
     }, [modalVisible]);
 
-    const availablePTs = [
-        {id: 1, name: "Nguyễn Văn A", exp: "5 năm"},
-        {id: 2, name: "Trần Thị B", exp: "3 năm"},
-        {id: 3, name: "Lê Văn C", exp: "7 năm"},
-    ];
 
     const getEventsForDate = (date) => {
         const day = moment(date, "DD/MM/YYYY").date();
@@ -158,7 +194,7 @@ export default function CalendarScreen() {
                                             {availablePTs.map((pt) => (
                                                 <Picker.Item
                                                     key={pt.id}
-                                                    label={`${pt.name} (${pt.exp})`}
+                                                    label={`${pt.email} (${pt.status})`}
                                                     value={pt}
                                                 />
                                             ))}
@@ -187,8 +223,8 @@ export default function CalendarScreen() {
 }
 
 const styles = StyleSheet.create({
-    buttonContainer: { flexDirection: "row", justifyContent: "space-between", width: "100%", marginTop: 20 },
-    confirmButtonText: { fontSize: 16, color: "white" },
+    buttonContainer: {flexDirection: "row", justifyContent: "space-between", width: "100%", marginTop: 20},
+    confirmButtonText: {fontSize: 16, color: "white"},
     container: {
         flex: 1,
         padding: 20,
