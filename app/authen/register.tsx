@@ -1,11 +1,11 @@
-import React, {useState} from "react";
+import React, {useEffect, useState} from "react";
 import {
     StyleSheet,
     View,
     TextInput,
     TouchableOpacity,
     Text,
-    Dimensions,
+    Dimensions, Alert,
 } from "react-native";
 import {Ionicons} from "@expo/vector-icons";
 import {StackNavigationProp} from "@react-navigation/stack";
@@ -34,8 +34,36 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({navigation}) => {
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
     const router = useRouter();
+    const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+        setUsername(emailOrPhone.concat("@gmail.com"))
+    }, [emailOrPhone]);
+
+    const Register = async () => {
+        setLoading(true);
+        const register = await fetch(`https://testupoadserver-fmbxg7epg4gscxb6.canadacentral-01.azurewebsites.net/api/users`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                name: username,
+                email: emailOrPhone,
+                password: password,
+            }),
+        });
+        setLoading(false)
+        if (register.status == 200) {
+            Alert.alert("Tạo tài khoản thành công");
+            login()
+        } else {
+            Alert.alert(`tạo tài khoản thất bại!`)
+        }
+    }
 
     const handleRegister = () => {
+        Register();
     };
 
     const login = () => {
@@ -73,8 +101,8 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({navigation}) => {
                 placeholderTextColor="#A9A9A9"
             />
 
-            <TouchableOpacity style={styles.loginButton}>
-                <Text style={styles.loginText}>Tạo Tài khoản</Text>
+            <TouchableOpacity style={styles.loginButton} onPress={() => handleRegister()}>
+                <Text style={styles.loginText}>{loading ? "Đang sử lý" : "Tạo Tài khoản"}</Text>
             </TouchableOpacity>
 
             <View style={styles.bottomText}>
