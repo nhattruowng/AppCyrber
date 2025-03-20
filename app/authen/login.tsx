@@ -16,6 +16,8 @@ GoogleSignin.configure({
     offlineAccess: true,
 });
 
+const API_LOCAL_URL = process.env.LOCAL_API_URL;
+
 
 
 const LoginScreen = () => {
@@ -76,14 +78,6 @@ const LoginScreen = () => {
 
     const handleLogin = async () => {
         try {
-
-//            const response = await fetch('https://gymbe-production-233d.up.railway.app/api/authen/login', {
-//                method: 'POST',
-//                headers: {
-//                    'Content-Type': 'application/json',
-//                },
-//                body: JSON.stringify({email, password}),
-//            });
             const response = await fetch('https://testupoadserver-fmbxg7epg4gscxb6.canadacentral-01.azurewebsites.net/api/users/login', {
                 method: 'POST',
                 headers: {
