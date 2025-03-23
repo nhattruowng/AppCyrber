@@ -1,11 +1,11 @@
-import { useEffect, useState } from "react";
-import { Text, View, StyleSheet, FlatList, TouchableOpacity, Modal } from "react-native";
-import { Calendar, LocaleConfig } from "react-native-calendars";
+import {useEffect, useState} from "react";
+import {Text, View, StyleSheet, FlatList, TouchableOpacity, Modal} from "react-native";
+import {Calendar, LocaleConfig} from "react-native-calendars";
 import moment from "moment";
 import "moment/locale/vi";
-import { Picker } from "@react-native-picker/picker";
-import { RootState } from "@/app/redux/store";
-import { useSelector } from "react-redux";
+import {Picker} from "@react-native-picker/picker";
+import {RootState} from "@/app/redux/store";
+import {useSelector} from "react-redux";
 
 const API_URL = "https://testupoadserver-fmbxg7epg4gscxb6.canadacentral-01.azurewebsites.net/api/trainers";
 
@@ -45,8 +45,8 @@ export default function CalendarScreen() {
     const [markedDates, setMarkedDates] = useState<Record<string, any>>({});
     const user = useSelector((state: RootState) => state.user);
 
-    const apiDuration = 15; // Thời gian khả dụng là 15 tiếng tính từ 6h sáng
-    const startHour = 6; // Bắt đầu từ 6h sáng
+    const apiDuration = 15;
+    const startHour = 6;
 
     // Fetch schedules
     useEffect(() => {
@@ -119,15 +119,15 @@ export default function CalendarScreen() {
         scheduleList.forEach((item) => {
             const formattedDate = moment(item.dateTime).format("YYYY-MM-DD");
             if (item.checkin && item.checkout) {
-                marks[formattedDate] = { marked: true, dotColor: "#02ff17" };
+                marks[formattedDate] = {marked: true, dotColor: "#02ff17"};
             } else if (item.checkin) {
-                marks[formattedDate] = { marked: true, dotColor: "#c42e01" };
+                marks[formattedDate] = {marked: true, dotColor: "#c42e01"};
             } else {
-                marks[formattedDate] = { marked: true, dotColor: "#007AFF" };
+                marks[formattedDate] = {marked: true, dotColor: "#007AFF"};
             }
 
             if (formattedDate === moment(lastDate).format("YYYY-MM-DD")) {
-                marks[formattedDate] = { marked: true, dotColor: "red" };
+                marks[formattedDate] = {marked: true, dotColor: "red"};
             }
         });
 
@@ -158,12 +158,12 @@ export default function CalendarScreen() {
                 }}
             />
             {selectedDate && (
-                <View style={{ padding: 10 }}>
-                    <Text style={{ fontSize: 16, fontWeight: "bold" }}>Ngày: {selectedDate}</Text>
+                <View style={{padding: 10}}>
+                    <Text style={{fontSize: 16, fontWeight: "bold"}}>Ngày: {selectedDate}</Text>
                     <FlatList
                         data={getEventsForDate(selectedDate)}
                         keyExtractor={(item) => item.id}
-                        renderItem={({ item }) => (
+                        renderItem={({item}) => (
                             <TouchableOpacity
                                 style={{
                                     padding: 10,
@@ -179,8 +179,8 @@ export default function CalendarScreen() {
                                 }}
                             >
                                 {/*<Text style={{ fontSize: 14 }}>📅 ID: {item.id}</Text>*/}
-                                <Text style={{ fontSize: 14 }}>Check-in: {item.checkin ? "✅" : "❌"}</Text>
-                                <Text style={{ fontSize: 14 }}>Check-out: {item.checkout ? "✅" : "❌"}</Text>
+                                <Text style={{fontSize: 14}}>Check-in: {item.checkin ? "✅" : "❌"}</Text>
+                                <Text style={{fontSize: 14}}>Check-out: {item.checkout ? "✅" : "❌"}</Text>
                             </TouchableOpacity>
                         )}
                     />
@@ -210,7 +210,8 @@ export default function CalendarScreen() {
                                 {/*</View>*/}
                                 <View style={styles.modalSection}>
                                     <Text style={styles.modalLabel}>Trạng thái:</Text>
-                                    <Text style={[styles.modalValue, isPastDate ? styles.statusPast : styles.statusPending]}>
+                                    <Text
+                                        style={[styles.modalValue, isPastDate ? styles.statusPast : styles.statusPending]}>
                                         {isPastDate ? "⏳ Đã qua" : "🔄 Chưa thực thi"}
                                     </Text>
                                 </View>
@@ -238,9 +239,9 @@ export default function CalendarScreen() {
                                         onValueChange={(value) => setSelectedTime(value)}
                                         style={styles.picker}
                                     >
-                                        <Picker.Item label="Chọn giờ" value={null} />
+                                        <Picker.Item label="Chọn giờ" value={null}/>
                                         {availableTimes.map((time) => (
-                                            <Picker.Item key={time} label={time} value={time} />
+                                            <Picker.Item key={time} label={time} value={time}/>
                                         ))}
                                     </Picker>
                                 </View>
@@ -253,9 +254,10 @@ export default function CalendarScreen() {
                                             onValueChange={(value) => setSelectedPT(value)}
                                             style={styles.picker}
                                         >
-                                            <Picker.Item label="Chọn PT" value={null} />
+                                            <Picker.Item label="Chọn PT" value={null}/>
                                             {availablePTs.map((pt) => (
-                                                <Picker.Item key={pt.id} label={`${pt.email} (${pt.status})`} value={pt} />
+                                                <Picker.Item key={pt.id} label={`${pt.email} (${pt.status})`}
+                                                             value={pt}/>
                                             ))}
                                         </Picker>
                                     </View>
@@ -268,7 +270,8 @@ export default function CalendarScreen() {
                                 <Text style={styles.closeButtonText}>Đóng</Text>
                             </TouchableOpacity>
                             {!isPastDate && (
-                                <TouchableOpacity onPress={() => console.log("Xác nhận đặt lịch")} style={styles.closeButton}>
+                                <TouchableOpacity onPress={() => console.log("Xác nhận đặt lịch")}
+                                                  style={styles.closeButton}>
                                     <Text style={styles.confirmButtonText}>Xác nhận</Text>
                                 </TouchableOpacity>
                             )}
@@ -281,32 +284,39 @@ export default function CalendarScreen() {
 }
 
 const styles = StyleSheet.create({
-    buttonContainer: { flexDirection: "row", justifyContent: "space-between", width: "100%", marginTop: 20 },
-    confirmButtonText: { fontSize: 16, color: "white" },
-    container: { flex: 1, padding: 20, backgroundColor: "#fff" },
-    listContainer: { marginTop: 20 },
-    selectedDate: { fontSize: 18, fontWeight: "bold", marginBottom: 10 },
-    item: { backgroundColor: "#f0f0f0", padding: 15, borderRadius: 8, marginBottom: 10 },
-    itemText: { fontSize: 16 },
-    modalOverlay: { flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "rgba(0, 0, 0, 0.6)" },
+    buttonContainer: {flexDirection: "row", justifyContent: "space-between", width: "100%", marginTop: 20},
+    confirmButtonText: {fontSize: 16, color: "white"},
+    container: {flex: 1, padding: 20, backgroundColor: "#fff"},
+    listContainer: {marginTop: 20},
+    selectedDate: {fontSize: 18, fontWeight: "bold", marginBottom: 10},
+    item: {backgroundColor: "#f0f0f0", padding: 15, borderRadius: 8, marginBottom: 10},
+    itemText: {fontSize: 16},
+    modalOverlay: {flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "rgba(0, 0, 0, 0.6)"},
     modalContainer: {
         backgroundColor: "#fff",
         width: "85%",
         padding: 20,
         borderRadius: 15,
         shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
+        shadowOffset: {width: 0, height: 2},
         shadowOpacity: 0.3,
         shadowRadius: 5,
         elevation: 5,
     },
-    modalTitle: { fontSize: 22, fontWeight: "bold", color: "#333", textAlign: "center", marginBottom: 20 },
-    modalSection: { marginBottom: 20, width: "100%" },
-    modalLabel: { fontSize: 16, fontWeight: "600", color: "#555", marginBottom: 8 },
-    modalValue: { fontSize: 16, color: "#333" },
-    statusPast: { color: "#e74c3c" },
-    statusPending: { color: "#3498db" },
-    picker: { width: "100%", backgroundColor: "#f9f9f9", borderRadius: 8 },
-    closeButton: { backgroundColor: "#007AFF", paddingVertical: 12, paddingHorizontal: 30, borderRadius: 8, alignSelf: "center", marginTop: 10 },
-    closeButtonText: { color: "#fff", fontSize: 16, fontWeight: "600" },
+    modalTitle: {fontSize: 22, fontWeight: "bold", color: "#333", textAlign: "center", marginBottom: 20},
+    modalSection: {marginBottom: 20, width: "100%"},
+    modalLabel: {fontSize: 16, fontWeight: "600", color: "#555", marginBottom: 8},
+    modalValue: {fontSize: 16, color: "#333"},
+    statusPast: {color: "#e74c3c"},
+    statusPending: {color: "#3498db"},
+    picker: {width: "100%", backgroundColor: "#f9f9f9", borderRadius: 8},
+    closeButton: {
+        backgroundColor: "#007AFF",
+        paddingVertical: 12,
+        paddingHorizontal: 30,
+        borderRadius: 8,
+        alignSelf: "center",
+        marginTop: 10
+    },
+    closeButtonText: {color: "#fff", fontSize: 16, fontWeight: "600"},
 });
