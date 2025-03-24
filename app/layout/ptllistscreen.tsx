@@ -141,12 +141,11 @@ export default function VehicleManagementScreen() {
         <View style={styles.container}>
             {/* Header */}
             <View style={styles.header}>
-
                 <TouchableOpacity
                     style={styles.addButton}
                     onPress={() => setAddModalVisible(true)}
                 >
-                    <Text style={styles.addButtonText}>+ Thêm PT</Text>
+                    <Text style={styles.addButtonText}>➕ Thêm PT</Text>
                 </TouchableOpacity>
             </View>
 
@@ -303,6 +302,30 @@ const styles = StyleSheet.create({
         marginBottom: 15,
         backgroundColor: "#fafafa",
     },
+    header: {
+        flexDirection: "row",
+        justifyContent: "flex-end",
+        alignItems: "center",
+        paddingHorizontal: 16,
+        marginVertical: 12,
+        marginTop: 30, // Hạ nút xuống
+    },
+    addButton: {
+        backgroundColor: "#4CAF50",
+        paddingVertical: 12,
+        paddingHorizontal: 20,
+        borderRadius: 24,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 3,
+    },
+    addButtonText: {
+        color: "#fff",
+        fontSize: 16,
+        fontWeight: "600",
+    },
     picker: {
         height: 50,
         width: "100%",
@@ -320,30 +343,10 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: "#f5f5f5",
     },
-    header: {
-        flexDirection: "row",
-        justifyContent: "space-between",
-        alignItems: "center",
-        padding: 15,
-        backgroundColor: "#fff",
-        borderBottomWidth: 1,
-        borderBottomColor: "#eee",
-    },
     headerTitle: {
         fontSize: 20,
         fontWeight: "bold",
         color: "#333",
-    },
-    addButton: {
-        backgroundColor: "#007bff",
-        paddingVertical: 8,
-        paddingHorizontal: 15,
-        borderRadius: 20,
-    },
-    addButtonText: {
-        color: "#fff",
-        fontSize: 16,
-        fontWeight: "600",
     },
     listContainer: {
         flex: 1,

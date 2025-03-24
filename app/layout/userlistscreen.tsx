@@ -10,6 +10,7 @@ interface User {
   email: string;
   roles?: string[];
   enable: boolean;
+  plan: string;
 }
 
 
@@ -60,7 +61,7 @@ export default function UserListScreen() {
     const lowerSearch = search.toLowerCase();
     const filtered = users.filter(
       (u) =>
-        !u.role?.includes("ADMIN") && // Sửa từ role thành roles để khớp với interface
+        !u.roles?.includes("ADMIN") && // Sửa từ role thành roles để khớp với interface
         ((u.name || "").toLowerCase().includes(lowerSearch) ||
           (u.email || "").toLowerCase().includes(lowerSearch))
     );
@@ -129,10 +130,11 @@ export default function UserListScreen() {
   return (
     <View style={styles.container}>
       <TextInput
-        style={styles.searchInput}
-        placeholder="Tìm kiếm..."
-        value={search}
-        onChangeText={setSearch}
+          style={styles.searchInput}
+          placeholder="🔍 Tìm kiếm..."
+          placeholderTextColor="#999"
+          value={search}
+          onChangeText={setSearch}
       />
 
       <ScrollView showsVerticalScrollIndicator={false}>
@@ -140,24 +142,30 @@ export default function UserListScreen() {
           <Text style={styles.noData}>Không tìm thấy người dùng</Text>
         ) : (
           filteredUsers.map((userItem) => (
-            <View key={userItem.id} style={styles.userCard}>
-              <View>
-                <Text style={styles.userName}>{userItem.name || "N/A"}</Text>
-                <Text style={styles.userEmail}>{userItem.email || "N/A"}</Text>
-                <Text style={styles.userStatus}>
-                  Trạng thái: {userItem.enable ? "Đang hoạt động" : "Đã khóa"}
-                </Text>
+              <View key={userItem.id} style={styles.userCard}>
+                <View style={styles.userInfo}>
+                  <Text style={styles.userName}>{userItem.name || "N/A"}</Text>
+                  <Text style={styles.userPlan}>Gói: {userItem.plan || "N/A"}</Text>
+                  <Text style={styles.userEmail}>{userItem.email || "N/A"}</Text>
+                  <Text style={styles.userStatus}>
+                    Trạng thái: {userItem.enable ? "Đang hoạt động" : "Đã khóa"}
+                  </Text>
+                </View>
+
+                <TouchableOpacity
+                    style={[
+                      styles.toggleButton,
+                      !userItem.enable && styles.lockedButton,
+                    ]}
+                    onPress={() => handleToggleLock(userItem)}
+                    disabled={isLoading}
+                >
+                  <Text style={styles.toggleButtonText}>
+                    {!userItem.enable ? "Mở khóa" : "Khóa"}
+                  </Text>
+                </TouchableOpacity>
               </View>
-              <TouchableOpacity
-                style={[styles.toggleButton, !userItem.enable && styles.lockedButton]}
-                onPress={() => handleToggleLock(userItem)}
-                disabled={isLoading}
-              >
-                <Text style={styles.toggleButtonText}>
-                  {!userItem.enable ? "Mở khóa" : "Khóa"}
-                </Text>
-              </TouchableOpacity>
-            </View>
+
           ))
         )}
       </ScrollView>
@@ -198,55 +206,75 @@ const styles = StyleSheet.create({
     padding: 15,
     backgroundColor: "#F7F7F7",
   },
-  centerContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  searchInput: {
-    backgroundColor: "#FFF",
-    padding: 10,
-    borderRadius: 8,
-    marginBottom: 15,
-    borderWidth: 1,
-    borderColor: "#E0E0E0",
-  },
   userCard: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    backgroundColor: "#FFF",
-    padding: 15,
-    borderRadius: 8,
-    marginBottom: 10,
-    borderWidth: 1,
-    borderColor: "#E0E0E0",
+    padding: 16,
+    marginVertical: 8,
+    borderRadius: 12,
+    backgroundColor: "#fff",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  searchInput: {
+    height: 48,
+    paddingHorizontal: 16,
+    borderRadius: 24,
+    backgroundColor: "#F5F5F5",
+    fontSize: 16,
+    color: "#333",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+    marginTop: 8, // Điều chỉnh khoảng cách xuống dưới
+  },
+  userInfo: {
+    flex: 1,
+    gap: 4, // Khoảng cách giữa các dòng thông tin
   },
   userName: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: "600",
     color: "#333",
   },
+  userPlan: {
+    fontSize: 14,
+    fontWeight: "500",
+    color: "#555",
+  },
   userEmail: {
     fontSize: 14,
-    color: "#666",
+    color: "#777",
   },
   userStatus: {
-    fontSize: 12,
-    color: "#555",
-    marginTop: 4,
+    fontSize: 14,
+    fontWeight: "500",
+    color: "#007BFF",
   },
   toggleButton: {
-    padding: 8,
-    backgroundColor: "#007AFF",
-    borderRadius: 5,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    backgroundColor: "#4CAF50",
   },
   lockedButton: {
-    backgroundColor: "#FF3B30",
+    backgroundColor: "#FF4D4F",
   },
   toggleButtonText: {
-    color: "#FFF",
-    fontWeight: "500",
+    color: "#fff",
+    fontWeight: "600",
+    fontSize: 14,
+  },
+  centerContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
   },
   noData: {
     textAlign: "center",

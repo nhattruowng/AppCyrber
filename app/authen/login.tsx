@@ -29,6 +29,7 @@ const LoginScreen = () => {
     const dispatch = useDispatch();
 
     const [showInput, setShowInput] = useState<boolean>(false);
+    const [loading, setLoading] = useState<boolean>(false);
 
     const [userstore, setUserStore] = useState<any>(null);
 
@@ -77,6 +78,7 @@ const LoginScreen = () => {
 
 
     const handleLogin = async () => {
+        setLoading(true);
         try {
             const response = await fetch('https://testupoadserver-fmbxg7epg4gscxb6.canadacentral-01.azurewebsites.net/api/users/login', {
                 method: 'POST',
@@ -86,17 +88,12 @@ const LoginScreen = () => {
                 body: JSON.stringify({email, password}),
             });
 
-            console.log(email)
-            console.log(password)
-
             if (!response.ok) {
                 throw new Error('Đăng nhập thất bại');
             }
             const data = await response.json();
             const decoded: any = jwtDecode(data.data.token);
             const roles = decoded.roles || [];
-
-            console.log(roles)
             dispatch(
                 setUser({
                     id: data.data.id,
@@ -111,9 +108,12 @@ const LoginScreen = () => {
             if (user) {
                 router.push("/calendar")
             }
-            console.log('Đăng nhập thành công!');
+            setLoading(false);
         } catch (error) {
             console.error('Lỗi khi đăng nhập:', error);
+        }
+        finally {
+            setLoading(false);
         }
     };
 
@@ -206,7 +206,7 @@ const LoginScreen = () => {
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.loginButton} onPress={() => handleLogin()}>
-                <Text style={styles.loginText}>Đăng nhập</Text>
+                <Text style={styles.loginText}>{loading ? "Đang tải .." : "Đăng nhập"}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity onPress={() => setShowInput(!showInput)}>

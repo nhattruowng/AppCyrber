@@ -1,13 +1,16 @@
-import {useEffect, useState} from "react";
-import {Text, View, StyleSheet, FlatList, TouchableOpacity, Modal} from "react-native";
-import {Calendar, LocaleConfig} from "react-native-calendars";
+import React, { useEffect, useState, useCallback } from "react";
+import { Text, View, StyleSheet, FlatList, TouchableOpacity, Modal, Alert } from "react-native";
+import { Calendar, LocaleConfig } from "react-native-calendars";
+import { Picker } from "@react-native-picker/picker";
+import { useSelector } from "react-redux";
 import moment from "moment";
 import "moment/locale/vi";
-import {Picker} from "@react-native-picker/picker";
-import {RootState} from "@/app/redux/store";
-import {useSelector} from "react-redux";
+import { RootState } from "@/app/redux/store";
 
-const API_URL = "https://testupoadserver-fmbxg7epg4gscxb6.canadacentral-01.azurewebsites.net/api/trainers";
+// Cấu hình API và constants
+const API_URL = "https://testupoadserver-fmbxg7epg4gscxb6.canadacentral-01.azurewebsites.net/api";
+const API_DURATION = 15;
+const START_HOUR = 6;
 
 LocaleConfig.locales["vi"] = {
     monthNames: ["Tháng 1", "Tháng 2", "Tháng 3", "Tháng 4", "Tháng 5", "Tháng 6", "Tháng 7", "Tháng 8", "Tháng 9", "Tháng 10", "Tháng 11", "Tháng 12"],
@@ -16,6 +19,13 @@ LocaleConfig.locales["vi"] = {
     today: "Hôm nay",
 };
 LocaleConfig.defaultLocale = "vi";
+
+// Định nghĩa types
+interface User {
+    id: string;
+    token: string;
+    roles: string[];
+}
 
 interface PT {
     id: string;
@@ -27,127 +37,236 @@ interface PT {
 
 interface Schedule {
     id: string;
-    TrainerId: string;
+    TrainerId: string | null;
     checkout: boolean;
     checkin: boolean;
     dateTime: string;
+    UserEmail?: string;
 }
 
-export default function CalendarScreen() {
-    const [selectedDate, setSelectedDate] = useState("");
-    const [selectedItem, setSelectedItem] = useState<Schedule | null>(null);
+interface PtDataMap {
+    [key: string]: PT | null;
+}
+
+interface PtLoadingMap {
+    [key: string]: boolean;
+}
+
+// Utility functions
+const formatDate = (dateString: string): string => {
+    const [day, month, year] = dateString.split('/');
+    return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+};
+
+const CalendarScreen: React.FC = () => {
+    const [selectedDate, setSelectedDate] = useState<string>("");
     const [modalVisible, setModalVisible] = useState(false);
-    const [selectedTime, setSelectedTime] = useState<string | null>(null);
-    const [selectedPT, setSelectedPT] = useState<PT | null>(null);
-    const [availableTimes, setAvailableTimes] = useState<string[]>([]);
+    const [loadingCategory, setLoadingCategory] = useState(false);
+    const [loadingBooking, setLoadingBooking] = useState(false);
+    const [loadingPTlist, setloadingPTlist] = useState(false);
+    const [ptLoading, setPtLoading] = useState<PtLoadingMap>({});
     const [scheduleList, setScheduleList] = useState<Schedule[]>([]);
     const [availablePTs, setAvailablePTs] = useState<PT[]>([]);
     const [markedDates, setMarkedDates] = useState<Record<string, any>>({});
-    const user = useSelector((state: RootState) => state.user);
+    const [ptData, setPtData] = useState<PtDataMap>({});
+    const [selectedItem, setSelectedItem] = useState<Schedule | null>(null);
+    const [selectedPT, setSelectedPT] = useState<PT | null>(null);
 
-    const apiDuration = 15;
-    const startHour = 6;
+    const user = useSelector((state: RootState) => state.user as User);
 
-    // Fetch schedules
-    useEffect(() => {
-        const fetchSchedules = async () => {
-            const rs = await fetch(`https://testupoadserver-fmbxg7epg4gscxb6.canadacentral-01.azurewebsites.net/api/schedules-io/user/${user.id}`, {
-                method: "GET",
+    // Memoized fetch functions
+    const fetchSchedules = useCallback(async () => {
+        setLoadingCategory(true);
+        try {
+            const response = await fetch(`${API_URL}/schedules-io/user/${user.id}`, {
                 headers: {
                     Authorization: `Bearer ${user.token}`,
                     Accept: "application/json",
                 },
             });
-            if (rs.status === 200) {
-                const result = await rs.json();
-                if (result.httpStatus === "OK") {
-                    const userData = Array.isArray(result.data) ? result.data : result;
-                    setScheduleList(userData);
-                }
+            const result = await response.json();
+            if (response.ok && result.httpStatus === "OK") {
+                setScheduleList(Array.isArray(result.data) ? result.data : []);
             } else {
                 setScheduleList([]);
             }
-        };
-        fetchSchedules();
+        } catch (error) {
+            console.error("Fetch schedules error:", error);
+            setScheduleList([]);
+        } finally {
+            setLoadingCategory(false);
+        }
+    }, [user.id, user.token]);
+
+    const fetchAvailablePTs = useCallback(async () => {
+        if (!selectedDate) return;
+        try {
+            setloadingPTlist(true);
+            const date = formatDate(selectedDate);
+            const response = await fetch(`${API_URL}/trainers/trainer/free/${date}`, {
+                headers: { Accept: "application/json" },
+            });
+            const result = await response.json();
+            setAvailablePTs(Array.isArray(result.data) ? result.data : []);
+            setloadingPTlist(false);
+        } catch (error) {
+            console.error("Fetch PTs error:", error);
+            setAvailablePTs([]);
+        }
+    }, [selectedDate]);
+
+    const fetchPTDetails = useCallback(async (ptid: string | null) => {
+        if (!ptid) {
+            setPtData(prev => ({ ...prev, [ptid as any]: null }));
+            return;
+        }
+
+        setPtLoading(prev => ({ ...prev, [ptid]: true }));
+        try {
+            const response = await fetch(`${API_URL}/trainers/trainer/${ptid}`, {
+                headers: {
+                    Authorization: `Bearer ${user.token}`,
+                    Accept: "application/json",
+                },
+            });
+            const result = await response.json();
+            if (result.httpStatus === "OK") {
+                setPtData(prev => ({ ...prev, [ptid]: result.data }));
+            }
+        } catch (error) {
+            console.error("Fetch PT details error:", error);
+        } finally {
+            setPtLoading(prev => ({ ...prev, [ptid]: false }));
+        }
     }, [user.token]);
 
-    // Fetch trainers
-    useEffect(() => {
-        const fetchTrainers = async () => {
-            try {
-                const response = await fetch(`${API_URL}/list-all`, {
-                    method: "GET",
+    const fetchAdminData = useCallback(async () => {
+        if (!selectedDate || !user.roles.includes("ROLE_ADMIN")) return;
+        setLoadingCategory(true);
+        try {
+            const date = formatDate(selectedDate);
+            const response = await fetch(
+                `${API_URL}/schedules-io/category/total-day/${date}`,
+                {
                     headers: {
-                        Accept: "application/json",
+                        Authorization: `Bearer ${user.token}`,
+                        "Content-Type": "application/json",
                     },
-                });
-                const result = await response.json();
-                if (result.httpStatus === "OK") {
-                    const userData = Array.isArray(result.data) ? result.data : result;
-                    setAvailablePTs(userData);
                 }
-            } catch (error) {
-                console.error("Lỗi khi lấy danh sách trainers:", error);
+            );
+            const result = await response.json();
+            if (response.ok && result.httpStatus === "OK") {
+                setScheduleList(Array.isArray(result.data) ? result.data : []);
+            } else {
+                setScheduleList([]);
             }
-        };
-        fetchTrainers();
-    }, []);
-
-    // Generate available times
-    useEffect(() => {
-        const currentHour = new Date().getHours();
-        const endHour = startHour + apiDuration;
-        const actualStartHour = Math.max(currentHour, startHour);
-        const times = [];
-        for (let i = actualStartHour; i <= endHour && i < 24; i++) {
-            times.push(`${i}:00`);
+        } catch (error) {
+            console.error("Fetch admin data error:", error);
+            Alert.alert("Lỗi", "Không thể tải dữ liệu admin");
+        } finally {
+            setLoadingCategory(false);
         }
-        setAvailableTimes(times);
-    }, [modalVisible]);
+    }, [selectedDate, user.roles, user.token]);
 
-    // Update marked dates based on scheduleList
+
+    // Effects
+    useEffect(() => { fetchSchedules(); }, [fetchSchedules]);
+    useEffect(() => { fetchAvailablePTs(); }, [fetchAvailablePTs]);
+    useEffect(() => { fetchAdminData(); }, [fetchAdminData]);
+
     useEffect(() => {
         const marks: Record<string, any> = {};
-        if (scheduleList.length === 0) {
+        if (!scheduleList.length) {
             setMarkedDates(marks);
             return;
         }
 
-        const sortedSchedules = [...scheduleList].sort((a, b) => moment(a.dateTime).diff(moment(b.dateTime)));
-        const lastDate = sortedSchedules[sortedSchedules.length - 1].dateTime;
-
-        scheduleList.forEach((item) => {
-            const formattedDate = moment(item.dateTime).format("YYYY-MM-DD");
-            if (item.checkin && item.checkout) {
-                marks[formattedDate] = {marked: true, dotColor: "#02ff17"};
-            } else if (item.checkin) {
-                marks[formattedDate] = {marked: true, dotColor: "#c42e01"};
-            } else {
-                marks[formattedDate] = {marked: true, dotColor: "#007AFF"};
-            }
-
-            if (formattedDate === moment(lastDate).format("YYYY-MM-DD")) {
-                marks[formattedDate] = {marked: true, dotColor: "red"};
-            }
+        scheduleList.forEach(item => {
+            const date = moment(item.dateTime).format("YYYY-MM-DD");
+            marks[date] = {
+                marked: true,
+                dotColor: item.checkin && item.checkout
+                    ? "#02ff17"
+                    : item.checkin
+                        ? "#c42e01"
+                        : "#007AFF"
+            };
         });
-
         setMarkedDates(marks);
     }, [scheduleList]);
 
-    // Get events for selected date
+    // Render helpers
     const getEventsForDate = (date: string): Schedule[] => {
-        return scheduleList.filter((event) => moment(event.dateTime).format("DD/MM/YYYY") === date);
+        return scheduleList.filter(event =>
+            moment(event.dateTime).format("DD/MM/YYYY") === date
+        );
     };
 
     const isPastDate = selectedDate && moment(selectedDate, "DD/MM/YYYY").isBefore(moment(), "day");
 
+    const renderScheduleItem = ({ item }: { item: Schedule }) => (
+        <TouchableOpacity
+            style={styles.item}
+            onPress={() => {
+                setSelectedItem(item);
+                setModalVisible(true);
+                fetchPTDetails(item.TrainerId);
+            }}
+        >
+            {item.UserEmail && <Text style={styles.emailText}>Email: {item.UserEmail}</Text>}
+            <Text style={styles.statusText}>Check-in: {item.checkin ? "✅" : "❌"}</Text>
+            <Text style={styles.statusText}>Check-out: {item.checkout ? "✅" : "❌"}</Text>
+            <Text style={styles.statusText}>
+                PT: {ptLoading[item.TrainerId ?? ""]
+                ? "Đang tải..."
+                : item.TrainerId && ptData[item.TrainerId]?.email
+                    ? `${ptData[item.TrainerId].email} ✅`
+                    : "❌"}
+            </Text>
+        </TouchableOpacity>
+    );
+
+
+    const handleBookingPT = useCallback(async (idSchedule: string, idPT: string) => {
+        if (!idSchedule || !idPT) {
+            Alert.alert("Lỗi", "Vui lòng chọn lịch hẹn và PT hợp lệ");
+            return;
+        }
+
+        setLoadingBooking(true);
+        try {
+            const response = await fetch(`${API_URL}/booking/trainner`, {
+                method: "POST",
+                headers: {
+                    Authorization: `Bearer ${user.token}`,
+                    Accept: "application/json",
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    idSchedule,
+                    idPT,
+                }),
+            });
+
+            if (response.status === 200) {
+                Alert.alert("Thành công", "Đăng ký PT thành công!");
+                await Promise.all([fetchAdminData(), fetchSchedules()]);
+            } else {
+                const result = await response.json();
+                Alert.alert("Thất bại", result.message || "Đăng ký PT thất bại, vui lòng thử lại!");
+            }
+        } catch (error) {
+            console.error("Lỗi khi booking PT:", error);
+            Alert.alert("Thất bại", "Đã xảy ra lỗi khi đăng ký PT!");
+        } finally {
+            setLoadingBooking(false);
+        }
+    }, [user.token, fetchAdminData, fetchSchedules]);
+
     return (
         <View style={styles.container}>
             <Calendar
-                onDayPress={(day) => {
-                    const formattedDate = moment(day.dateString).format("DD/MM/YYYY");
-                    setSelectedDate(formattedDate);
-                }}
+                onDayPress={day => setSelectedDate(moment(day.dateString).format("DD/MM/YYYY"))}
                 markedDates={{
                     ...markedDates,
                     [moment(selectedDate, "DD/MM/YYYY").format("YYYY-MM-DD")]: {
@@ -157,166 +276,264 @@ export default function CalendarScreen() {
                     },
                 }}
             />
-            {selectedDate && (
-                <View style={{padding: 10}}>
-                    <Text style={{fontSize: 16, fontWeight: "bold"}}>Ngày: {selectedDate}</Text>
+
+            {loadingCategory ? (
+                <Text style={styles.loadingText}>Đang tải...</Text>
+            ) : selectedDate ? (
+                <View style={styles.scheduleContainer}>
+                    <Text style={styles.dateText}>Ngày: {selectedDate}</Text>
                     <FlatList
                         data={getEventsForDate(selectedDate)}
-                        keyExtractor={(item) => item.id}
-                        renderItem={({item}) => (
-                            <TouchableOpacity
-                                style={{
-                                    padding: 10,
-                                    marginVertical: 5,
-                                    backgroundColor: "#f0f0f0",
-                                    borderRadius: 5,
-                                }}
-                                onPress={() => {
-                                    setSelectedItem(item);
-                                    setModalVisible(true);
-                                    setSelectedTime(null);
-                                    setSelectedPT(null);
-                                }}
-                            >
-                                {/*<Text style={{ fontSize: 14 }}>📅 ID: {item.id}</Text>*/}
-                                <Text style={{fontSize: 14}}>Check-in: {item.checkin ? "✅" : "❌"}</Text>
-                                <Text style={{fontSize: 14}}>Check-out: {item.checkout ? "✅" : "❌"}</Text>
-                            </TouchableOpacity>
-                        )}
+                        renderItem={renderScheduleItem}
+                        keyExtractor={item => item.id}
+                        ListEmptyComponent={<Text style={styles.emptyText}>Không có lịch hẹn</Text>}
+                        contentContainerStyle={styles.scheduleList}
+                        showsVerticalScrollIndicator={true}
+                        nestedScrollEnabled={true}
                     />
                 </View>
-            )}
+            ) : null}
+            {/*{selectedDate && (*/}
+            {/*    <View style={styles.scheduleContainer}>*/}
+            {/*        <Text style={styles.dateText}>Ngày: {selectedDate}</Text>*/}
+            {/*        {loadingCategory ? (*/}
+            {/*            <Text style={styles.loadingText}>Đang tải...</Text>*/}
+            {/*        ) : (*/}
+            {/*            <FlatList*/}
+            {/*                data={getEventsForDate(selectedDate)}*/}
+            {/*                renderItem={renderScheduleItem}*/}
+            {/*                keyExtractor={item => item.id}*/}
+            {/*                ListEmptyComponent={<Text style={styles.emptyText}>Không có lịch hẹn</Text>}*/}
+            {/*                contentContainerStyle={styles.listContent}*/}
+            {/*            />*/}
+            {/*        )}*/}
+            {/*    </View>*/}
+            {/*)}*/}
 
-            <Modal
-                visible={modalVisible}
-                transparent
-                animationType="slide"
-                onRequestClose={() => setModalVisible(false)}
-            >
-                <View style={styles.modalOverlay}>
-                    <View style={styles.modalContainer}>
-                        <Text style={styles.modalTitle}>Thông tin lịch hẹn</Text>
+            {user.roles.includes("ROLE_USER") && (
+                <Modal
+                    visible={modalVisible}
+                    transparent
+                    animationType="slide"
+                    onRequestClose={() => setModalVisible(false)}
+                >
+                    <View style={styles.modalOverlay}>
+                        <View style={styles.modalContainer}>
+                            <Text style={styles.modalTitle}>Thông tin lịch hẹn</Text>
 
-                        <View style={styles.modalSection}>
-                            <Text style={styles.modalLabel}>Ngày hẹn:</Text>
-                            <Text style={styles.modalValue}>{selectedDate || "Chưa chọn"}</Text>
-                        </View>
+                            <Text style={styles.modalLabel}>Ngày: {selectedDate}</Text>
 
-                        {selectedItem && (
-                            <>
-                                {/*<View style={styles.modalSection}>*/}
-                                {/*    <Text style={styles.modalLabel}>ID lịch:</Text>*/}
-                                {/*    <Text style={styles.modalValue}>{selectedItem.id}</Text>*/}
-                                {/*</View>*/}
-                                <View style={styles.modalSection}>
-                                    <Text style={styles.modalLabel}>Trạng thái:</Text>
-                                    <Text
-                                        style={[styles.modalValue, isPastDate ? styles.statusPast : styles.statusPending]}>
-                                        {isPastDate ? "⏳ Đã qua" : "🔄 Chưa thực thi"}
+                            {selectedItem && (
+                                <>
+                                    <Text style={styles.modalLabel}>
+                                        Trạng thái: {isPastDate ? "⏳ Đã qua" : "🔄 Chưa thực thi"}
                                     </Text>
-                                </View>
-                                <View style={styles.modalSection}>
-                                    <Text style={styles.modalLabel}>Check-in:</Text>
-                                    <Text style={styles.modalValue}>{selectedItem.checkin ? "✅ Có" : "❌ Không"}</Text>
-                                </View>
-                                <View style={styles.modalSection}>
-                                    <Text style={styles.modalLabel}>Check-out:</Text>
-                                    <Text style={styles.modalValue}>{selectedItem.checkout ? "✅ Có" : "❌ Không"}</Text>
-                                </View>
-                                {/*<View style={styles.modalSection}>*/}
-                                {/*    <Text style={styles.modalLabel}>Check-out:</Text>*/}
-                                {/*    <Text style={styles.modalValue}>{selectedItem.checkout ? "✅ Có" : "❌ Không"}</Text>*/}
-                                {/*</View>*/}
-                            </>
-                        )}
+                                    {selectedItem.UserEmail && (
+                                        <Text style={styles.modalLabel}>Email: {selectedItem.UserEmail}</Text>
+                                    )}
+                                    <Text style={styles.statusText}>
+                                        Check-in: <Text style={selectedItem.checkin ? styles.successIcon : styles.errorIcon}>
+                                        {selectedItem.checkin ? "✅ Có" : "❌ Không"}
+                                    </Text>
+                                    </Text>
+                                    <Text style={styles.statusText}>
+                                        Check-out: <Text style={selectedItem.checkout ? styles.successIcon : styles.errorIcon}>
+                                        {selectedItem.checkout ? "✅ Có" : "❌ Không"}
+                                    </Text>
+                                    </Text>
+                                    <Text style={styles.statusText}>
+                                        PT: {ptLoading[selectedItem.TrainerId ?? ""]
+                                        ? "Đang tải..."
+                                        : selectedItem.TrainerId && ptData[selectedItem.TrainerId]?.email
+                                            ? <Text style={styles.successIcon}>{`${ptData[selectedItem.TrainerId].email} ✅`}</Text>
+                                            : <Text style={styles.errorIcon}>❌</Text>}
+                                    </Text>
+                                </>
+                            )}
 
-                        {!isPastDate && (
-                            <>
-                                <View style={styles.modalSection}>
-                                    <Text style={styles.modalLabel}>Chọn giờ hẹn:</Text>
-                                    <Picker
-                                        selectedValue={selectedTime}
-                                        onValueChange={(value) => setSelectedTime(value)}
-                                        style={styles.picker}
-                                    >
-                                        <Picker.Item label="Chọn giờ" value={null}/>
-                                        {availableTimes.map((time) => (
-                                            <Picker.Item key={time} label={time} value={time}/>
-                                        ))}
-                                    </Picker>
-                                </View>
-
-                                {selectedTime && (
-                                    <View style={styles.modalSection}>
-                                        <Text style={styles.modalLabel}>Chọn PT:</Text>
+                            {!isPastDate && !selectedItem?.TrainerId && (
+                                <View style={styles.pickerContainer}>
+                                    {loadingPTlist ? (
+                                        <Text style={styles.loadingText}>Đang tải danh sách PT...</Text>
+                                    ) : (
                                         <Picker
                                             selectedValue={selectedPT}
-                                            onValueChange={(value) => setSelectedPT(value)}
+                                            onValueChange={itemValue => setSelectedPT(itemValue)}
                                             style={styles.picker}
                                         >
-                                            <Picker.Item label="Chọn PT" value={null}/>
-                                            {availablePTs.map((pt) => (
-                                                <Picker.Item key={pt.id} label={`${pt.email} (${pt.status})`}
-                                                             value={pt}/>
+                                            <Picker.Item label="Chọn PT" value={null} />
+                                            {availablePTs.map(pt => (
+                                                <Picker.Item
+                                                    key={pt.id}
+                                                    label={`${pt.email} (${pt.enable ? "Có" : "Không"})`}
+                                                    value={pt}
+                                                />
                                             ))}
                                         </Picker>
-                                    </View>
-                                )}
-                            </>
-                        )}
-
-                        <View style={styles.buttonContainer}>
-                            <TouchableOpacity onPress={() => setModalVisible(false)} style={styles.closeButton}>
-                                <Text style={styles.closeButtonText}>Đóng</Text>
-                            </TouchableOpacity>
-                            {!isPastDate && (
-                                <TouchableOpacity onPress={() => console.log("Xác nhận đặt lịch")}
-                                                  style={styles.closeButton}>
-                                    <Text style={styles.confirmButtonText}>Xác nhận</Text>
-                                </TouchableOpacity>
+                                    )}
+                                </View>
                             )}
+
+                            <View style={styles.buttonContainer}>
+                                <TouchableOpacity
+                                    style={styles.closeButton}
+                                    onPress={() => setModalVisible(false)}
+                                >
+                                    <Text style={styles.buttonText}>Đóng</Text>
+                                </TouchableOpacity>
+
+                                {!isPastDate && !selectedItem?.TrainerId && (
+                                    <TouchableOpacity
+                                        style={[styles.confirmButton, loadingBooking && styles.disabledButton]}
+                                        onPress={() => handleBookingPT(selectedItem?.id ?? "", selectedPT?.id ?? "")}
+                                        disabled={loadingBooking || !selectedPT}
+                                    >
+                                        <Text style={styles.buttonText}>
+                                            {loadingBooking ? "Đang xử lý..." : "Xác nhận"}
+                                        </Text>
+                                    </TouchableOpacity>
+                                )}
+                            </View>
                         </View>
                     </View>
-                </View>
-            </Modal>
+                </Modal>
+            )}
         </View>
     );
-}
+};
 
 const styles = StyleSheet.create({
-    buttonContainer: {flexDirection: "row", justifyContent: "space-between", width: "100%", marginTop: 20},
-    confirmButtonText: {fontSize: 16, color: "white"},
-    container: {flex: 1, padding: 20, backgroundColor: "#fff"},
-    listContainer: {marginTop: 20},
-    selectedDate: {fontSize: 18, fontWeight: "bold", marginBottom: 10},
-    item: {backgroundColor: "#f0f0f0", padding: 15, borderRadius: 8, marginBottom: 10},
-    itemText: {fontSize: 16},
-    modalOverlay: {flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "rgba(0, 0, 0, 0.6)"},
+    modalOverlay: {
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
+        backgroundColor: "rgba(0,0,0,0.6)"
+    },
+    calendarContainer: {
+        padding: 16,
+        backgroundColor: '#fff',
+        borderBottomWidth: 1,
+        borderBottomColor: '#ddd',
+    },
+    dateHeader: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: '#333',
+        textAlign: 'center',
+    },
+    scheduleContainer: {
+        flex: 1,
+        paddingHorizontal: 16,
+        paddingTop: 10,
+    },
+    dateText: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        color: '#333',
+        marginBottom: 10,
+    },
+    scheduleList: {
+        paddingBottom: 20,
+    },
+    scheduleItem: {
+        backgroundColor: '#fff',
+        borderRadius: 12,
+        padding: 16,
+        marginVertical: 8,
+        elevation: 3,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+    },
+    statusText: {
+        fontSize: 14,
+        color: '#666',
+        marginBottom: 4,
+    },
+    successIcon: {
+        color: '#4CAF50',
+        fontWeight: 'bold',
+    },
+    errorIcon: {
+        color: '#e74c3c',
+        fontWeight: 'bold',
+    },
+    loadingText: {
+        fontSize: 16,
+        color: '#666',
+        textAlign: 'center',
+        marginTop: 20,
+    },
+    emptyText: {
+        fontSize: 16,
+        color: '#666',
+        textAlign: 'center',
+        marginTop: 20,
+    },
+    pickerContainer: {
+        marginVertical: 10,
+    },
+    picker: {
+        width: '100%',
+        height: 50,
+        backgroundColor: '#f9f9f9',
+        borderRadius: 8,
+        borderWidth: 1,
+        borderColor: '#ddd',
+    },
     modalContainer: {
-        backgroundColor: "#fff",
         width: "85%",
+        backgroundColor: "#fff",
         padding: 20,
         borderRadius: 15,
-        shadowColor: "#000",
-        shadowOffset: {width: 0, height: 2},
-        shadowOpacity: 0.3,
-        shadowRadius: 5,
-        elevation: 5,
+        elevation: 5
     },
-    modalTitle: {fontSize: 22, fontWeight: "bold", color: "#333", textAlign: "center", marginBottom: 20},
-    modalSection: {marginBottom: 20, width: "100%"},
-    modalLabel: {fontSize: 16, fontWeight: "600", color: "#555", marginBottom: 8},
-    modalValue: {fontSize: 16, color: "#333"},
-    statusPast: {color: "#e74c3c"},
-    statusPending: {color: "#3498db"},
-    picker: {width: "100%", backgroundColor: "#f9f9f9", borderRadius: 8},
+    modalTitle: {
+        fontSize: 22,
+        fontWeight: "bold",
+        textAlign: "center",
+        marginBottom: 20
+    },
+    modalLabel: {
+        fontSize: 16,
+        fontWeight: "600",
+        marginVertical: 5
+    },
+    buttonContainer: {
+        flexDirection: "row",
+        justifyContent: "space-around",
+        marginTop: 20
+    },
     closeButton: {
-        backgroundColor: "#007AFF",
-        paddingVertical: 12,
-        paddingHorizontal: 30,
-        borderRadius: 8,
-        alignSelf: "center",
-        marginTop: 10
+        backgroundColor: "#ff4444",
+        padding: 12,
+        borderRadius: 8
     },
-    closeButtonText: {color: "#fff", fontSize: 16, fontWeight: "600"},
+    confirmButton: {
+        backgroundColor: "#007AFF",
+        padding: 12,
+        borderRadius: 8
+    },
+    disabledButton: {
+        backgroundColor: "#cccccc",
+    },
+    buttonText: {
+        color: "#fff",
+        fontSize: 16,
+        fontWeight: "600"
+    },
+    container: { flex: 1, backgroundColor: "#fff" },
+    item: {
+        backgroundColor: "#f0f0f0",
+        padding: 15,
+        borderRadius: 8,
+        marginVertical: 5
+    },
+    emailText: { fontSize: 14, fontWeight: "bold", marginBottom: 5 },
+    listContent: {
+        paddingBottom: 20
+    },
 });
+
+export default CalendarScreen;

@@ -10,6 +10,12 @@ import postcss from "postcss";
 
 const API_LOCAL_URL = process.env.LOCAL_API_URL;
 
+interface Service {
+    id: string;
+    name: string;
+    total: number;
+    totalUser: number;
+}
 
 interface Member {
     id: string;
@@ -39,6 +45,7 @@ export default function ProfileScreen() {
     const dispatch = useDispatch();
     const user = useSelector((state: RootState) => state.user);
 
+    const [services, setServices] = useState<Service[]>([]);
     const [name, setName] = useState(user.name);
     const [phone, setPhone] = useState(user.phone);
     const [isEditing, setIsEditing] = useState<{ name: boolean; phone: boolean }>({
@@ -92,6 +99,34 @@ export default function ProfileScreen() {
         }
         return true;
     };
+
+
+    useEffect(() => {
+        const fetchDBAnaly = async () => {
+            try {
+                const response = await fetch(
+                    "https://testupoadserver-fmbxg7epg4gscxb6.canadacentral-01.azurewebsites.net/api/booking/analysis",
+                    {
+                        method: "GET",
+                        headers: {
+                            "Content-Type": "application/json",
+                            Authorization: `Bearer ${user.token}`,
+                        },
+                    }
+                );
+                if (!response.ok) throw new Error("Lỗi khi tải dữ liệu");
+                const result = await response.json();
+                const serviceData: Service[] = Object.values(result.data);
+                setServices(serviceData);
+            } catch (error) {
+                console.error("Lỗi khi gọi API:", error);
+            }
+        };
+
+        if (user.roles.includes("ROLE_ADMIN")) {
+            fetchDBAnaly();
+        }
+    }, [user]);
 
 
     /////////////////////////////// lay lich su sư dung
@@ -154,7 +189,7 @@ export default function ProfileScreen() {
             }
         };
 
-        if (user.id && user.token) {
+        if (user.id && user.token && user.roles.includes("ROLE_USER")) {
             loadHistory();
         }
     }, [user.id, user.token]);
@@ -236,12 +271,26 @@ export default function ProfileScreen() {
 
             {user.roles.includes("ROLE_ADMIN") && (
                 <ScrollView style={styles.serviceList} contentContainerStyle={styles.serviceContent}>
-                    {["Dịch vụ 1", "Dịch vụ 2", "Dịch vụ 3", "Dịch vụ 4", "Dịch vụ 5"].map((service, index) => (
-                        <View key={index} style={styles.serviceItem}>
-                            <Text style={styles.serviceText}>{service}</Text>
+                    {services.map((service) => (
+                        <View key={service.id} style={styles.serviceItem}>
+                            <View style={styles.row}>
+                                <Text style={styles.label}>Tên:</Text>
+                                <Text style={styles.value}>{service.name}</Text>
+                            </View>
+
+                            <View style={styles.row}>
+                                <Text style={styles.label}>Tổng tiền:</Text>
+                                <Text style={styles.value}>{service.total.toLocaleString()} VND</Text>
+                            </View>
+
+                            <View style={styles.row}>
+                                <Text style={styles.label}>Số người:</Text>
+                                <Text style={styles.value}>{service.totalUser} người</Text>
+                            </View>
                         </View>
                     ))}
                 </ScrollView>
+
             )}
 
             {user.roles.includes("ROLE_USER") && (
@@ -283,6 +332,7 @@ export default function ProfileScreen() {
 const InfoRow: React.FC<InfoRowProps> = ({label, value, isEditing, setValue, toggleEdit, onSave}) => (
     <View style={styles.row}>
         <Text style={styles.label}>{label}</Text>
+
         {isEditing ? (
             <TextInput
                 style={styles.input}
@@ -293,10 +343,19 @@ const InfoRow: React.FC<InfoRowProps> = ({label, value, isEditing, setValue, tog
         ) : (
             <Text style={styles.infoText}>{value}</Text>
         )}
-        <TouchableOpacity onPress={isEditing ? onSave : toggleEdit} style={styles.editIcon}>
-            <Ionicons name={isEditing ? "checkmark" : "pencil"} size={20} color="#FFD700"/>
+
+        <TouchableOpacity
+            onPress={isEditing ? onSave : toggleEdit}
+            style={styles.editIcon}
+        >
+            <Ionicons
+                name={isEditing ? "checkmark" : "pencil"}
+                size={20}
+                color="#FFD700"
+            />
         </TouchableOpacity>
     </View>
+
 );
 
 const styles = StyleSheet.create({
@@ -304,12 +363,68 @@ const styles = StyleSheet.create({
         color: "#13c654",
         fontWeight: "bold",
     },
+    row: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+        paddingVertical: 10,
+        paddingHorizontal: 16,
+        borderBottomWidth: 1,
+        borderBottomColor: "#ddd",
+    },
+    label: {
+        fontSize: 16,
+        fontWeight: "600",
+        color: "#444",
+        flex: 1,
+    },
+    input: {
+        flex: 2,
+        fontSize: 16,
+        paddingVertical: 6,
+        paddingHorizontal: 10,
+        borderWidth: 1,
+        borderColor: "#ccc",
+        borderRadius: 8,
+        color: "#333",
+    },
+    infoText: {
+        flex: 2,
+        fontSize: 16,
+        color: "#555",
+    },
+    editIcon: {
+        marginLeft: 12,
+        padding: 6,
+    },
     sectionTitle: {
         fontSize: 20,
         fontWeight: "bold",
         textAlign: "center",
         marginBottom: 10,
         color: "#ffffff",
+    },
+    serviceList: {
+        marginTop: 10,
+    },
+    serviceContent: {
+        paddingVertical: 10,
+        paddingHorizontal: 15,
+    },
+    serviceItem: {
+        marginBottom: 12,
+        padding: 16,
+        borderRadius: 12,
+        backgroundColor: "#FFFFFF",
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 3,
+    },
+    value: {
+        fontSize: 16,
+        color: "#333",
     },
     endTimeText: {
         color: "gray",
@@ -342,12 +457,6 @@ const styles = StyleSheet.create({
         color: "red",
         fontWeight: "bold",
     },
-    serviceItem: {
-        padding: 10,
-        marginVertical: 5,
-        backgroundColor: "#f0f0f0",
-        borderRadius: 8,
-    },
     serviceText: {
         fontSize: 16,
         fontWeight: "bold",
@@ -363,43 +472,6 @@ const styles = StyleSheet.create({
         borderRadius: 10,
         padding: 16,
         marginTop: 20,
-    },
-    row: {
-        flexDirection: "row",
-        justifyContent: "space-between",
-        alignItems: "center",
-        paddingVertical: 10,
-        borderBottomWidth: 1,
-        borderBottomColor: "#ddd",
-    },
-    label: {
-        fontSize: 16,
-        fontWeight: "bold",
-        color: "#333",
-        flex: 1,
-    },
-    input: {
-        height: 40,
-        width: "60%",
-        backgroundColor: "#f0f0f0",
-        borderRadius: 5,
-        paddingHorizontal: 10,
-        fontSize: 16,
-    },
-    infoText: {
-        fontSize: 16,
-        color: "#333",
-        flex: 1,
-    },
-    editIcon: {
-        padding: 5,
-    },
-    serviceList: {
-        flex: 1,
-        marginTop: 20,
-    },
-    serviceContent: {
-        paddingBottom: 20,
     },
     serviceTitle: {
         fontSize: 18,
@@ -419,6 +491,6 @@ const styles = StyleSheet.create({
         color: "#fff",
         fontSize: 16,
         fontWeight: "bold",
-    },
+    }
 });
 
