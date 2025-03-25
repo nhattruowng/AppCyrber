@@ -57,7 +57,6 @@ export default function ProfileScreen() {
     const [history, setHistory] = useState<HistoryType[]>([]);
 
 
-
     useEffect(() => {
         if (!user?.token) {
             router.push("/authen/login");
@@ -70,6 +69,11 @@ export default function ProfileScreen() {
     const pt = () => {
         router.push("/layout/ptllistscreen");
     }
+    const analy = () => {
+      router.push("/layout/analysisadmin");
+    }
+
+
     const logout = () => {
         Alert.alert("Xác nhận đăng xuất", "Bạn có chắc chắn muốn đăng xuất?", [
             {text: "Hủy", style: "cancel"},
@@ -101,32 +105,32 @@ export default function ProfileScreen() {
     };
 
 
-    useEffect(() => {
-        const fetchDBAnaly = async () => {
-            try {
-                const response = await fetch(
-                    "https://testupoadserver-fmbxg7epg4gscxb6.canadacentral-01.azurewebsites.net/api/booking/analysis",
-                    {
-                        method: "GET",
-                        headers: {
-                            "Content-Type": "application/json",
-                            Authorization: `Bearer ${user.token}`,
-                        },
-                    }
-                );
-                if (!response.ok) throw new Error("Lỗi khi tải dữ liệu");
-                const result = await response.json();
-                const serviceData: Service[] = Object.values(result.data);
-                setServices(serviceData);
-            } catch (error) {
-                console.error("Lỗi khi gọi API:", error);
-            }
-        };
-
-        if (user.roles.includes("ROLE_ADMIN")) {
-            fetchDBAnaly();
-        }
-    }, [user]);
+    // useEffect(() => {
+    //     const fetchDBAnaly = async () => {
+    //         try {
+    //             const response = await fetch(
+    //                 "https://testupoadserver-fmbxg7epg4gscxb6.canadacentral-01.azurewebsites.net/api/booking/analysis",
+    //                 {
+    //                     method: "GET",
+    //                     headers: {
+    //                         "Content-Type": "application/json",
+    //                         Authorization: `Bearer ${user.token}`,
+    //                     },
+    //                 }
+    //             );
+    //             if (!response.ok) throw new Error("Lỗi khi tải dữ liệu");
+    //             const result = await response.json();
+    //             const serviceData: Service[] = Object.values(result.data);
+    //             setServices(serviceData);
+    //         } catch (error) {
+    //             console.error("Lỗi khi gọi API:", error);
+    //         }
+    //     };
+    //
+    //     if (user.roles.includes("ROLE_ADMIN")) {
+    //         fetchDBAnaly();
+    //     }
+    // }, []);
 
 
     /////////////////////////////// lay lich su sư dung
@@ -266,32 +270,34 @@ export default function ProfileScreen() {
                     <TouchableOpacity style={styles.serviceItem} onPress={() => pt()}>
                         <Text style={styles.serviceText}>PT</Text>
                     </TouchableOpacity>
+                    <TouchableOpacity style={styles.serviceItem} onPress={() => analy()}>
+                        <Text style={styles.serviceText}>Thống kê dịch vụ</Text>
+                    </TouchableOpacity>
                 </>
             )}
 
-            {user.roles.includes("ROLE_ADMIN") && (
-                <ScrollView style={styles.serviceList} contentContainerStyle={styles.serviceContent}>
-                    {services.map((service) => (
-                        <View key={service.id} style={styles.serviceItem}>
-                            <View style={styles.row}>
-                                <Text style={styles.label}>Tên:</Text>
-                                <Text style={styles.value}>{service.name}</Text>
-                            </View>
+            {/*{user.roles.includes("ROLE_ADMIN") && (*/}
+            {/*    <ScrollView style={styles.serviceList} contentContainerStyle={styles.serviceContent}>*/}
+            {/*        {services.map((service) => (*/}
+            {/*            <View key={service.id} style={styles.serviceItem}>*/}
+            {/*                <View style={styles.row}>*/}
+            {/*                    <Text style={styles.label}>Tên:</Text>*/}
+            {/*                    <Text style={styles.value}>{service.name}</Text>*/}
+            {/*                </View>*/}
 
-                            <View style={styles.row}>
-                                <Text style={styles.label}>Tổng tiền:</Text>
-                                <Text style={styles.value}>{service.total.toLocaleString()} VND</Text>
-                            </View>
+            {/*                <View style={styles.row}>*/}
+            {/*                    <Text style={styles.label}>Tổng tiền:</Text>*/}
+            {/*                    <Text style={styles.value}>{service.total.toLocaleString()} VND</Text>*/}
+            {/*                </View>*/}
 
-                            <View style={styles.row}>
-                                <Text style={styles.label}>Số người:</Text>
-                                <Text style={styles.value}>{service.totalUser} người</Text>
-                            </View>
-                        </View>
-                    ))}
-                </ScrollView>
-
-            )}
+            {/*                <View style={styles.row}>*/}
+            {/*                    <Text style={styles.label}>Số người:</Text>*/}
+            {/*                    <Text style={styles.value}>{service.totalUser} người</Text>*/}
+            {/*                </View>*/}
+            {/*            </View>*/}
+            {/*        ))}*/}
+            {/*    </ScrollView>*/}
+            {/*)}*/}
 
             {user.roles.includes("ROLE_USER") && (
                 <View>

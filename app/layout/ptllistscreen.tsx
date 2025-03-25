@@ -4,7 +4,7 @@ import {
     ScrollView,
     StyleSheet,
     TouchableOpacity,
-    TextInput, Alert,
+    TextInput, Alert, ActivityIndicator,
 } from "react-native";
 import Modal from "react-native-modal";
 import {useSelector} from "react-redux";
@@ -139,22 +139,26 @@ export default function VehicleManagementScreen() {
 
     return (
         <View style={styles.container}>
-            {/* Header */}
             <View style={styles.header}>
+                <Text style={styles.headerTitle}>Danh Sách PT</Text>
                 <TouchableOpacity
                     style={styles.addButton}
                     onPress={() => setAddModalVisible(true)}
+                    activeOpacity={0.7}
                 >
                     <Text style={styles.addButtonText}>➕ Thêm PT</Text>
                 </TouchableOpacity>
             </View>
-
-            {/* List */}
             <ScrollView style={styles.listContainer}>
                 {loading ? (
-                    <Text style={styles.emptyText}>Đang tải...</Text>
+                    <View style={styles.loadingContainer}>
+                        <ActivityIndicator size="large" color="#3498db" />
+                        <Text style={styles.loadingText}>Đang tải dữ liệu...</Text>
+                    </View>
                 ) : vehicles.length === 0 ? (
-                    <Text style={styles.emptyText}>Không có PT nào.</Text>
+                        <View style={styles.emptyContainer}>
+                            <Text style={styles.emptyText}>Không có PT nào</Text>
+                        </View>
                 ) : (
                     vehicles.map((vehicle) => (
                         <View key={vehicle.id} style={styles.vehicleItem}>
@@ -303,28 +307,63 @@ const styles = StyleSheet.create({
         backgroundColor: "#fafafa",
     },
     header: {
-        flexDirection: "row",
-        justifyContent: "flex-end",
-        alignItems: "center",
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
         paddingHorizontal: 16,
-        marginVertical: 12,
-        marginTop: 30, // Hạ nút xuống
-    },
-    addButton: {
-        backgroundColor: "#4CAF50",
         paddingVertical: 12,
-        paddingHorizontal: 20,
-        borderRadius: 24,
-        shadowColor: "#000",
+        paddingTop: 24, // Extra padding for status bar
+        elevation: 3, // Subtle shadow for Android
+        shadowColor: '#000', // Subtle shadow for iOS
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 3,
+        shadowRadius: 3,
+    },
+    headerTitle: {
+        fontSize: 22,
+        fontWeight: '700',
+        color: '#1a1a1a',
+        letterSpacing: 0.5,
+    },
+    addButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#007bff', // A vibrant blue
+        paddingVertical: 8,
+        paddingHorizontal: 14,
+        borderRadius: 20, // More rounded for a modern look
+        elevation: 2,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.2,
+        shadowRadius: 2,
     },
     addButtonText: {
-        color: "#fff",
+        fontSize: 15,
+        color: '#ffffff',
+        fontWeight: '600',
+        marginLeft: 6, // Space between icon and text
+    },
+    loadingContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    loadingText: {
+        marginTop: 12,
         fontSize: 16,
-        fontWeight: "600",
+        color: '#666',
+    },
+    emptyContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 16,
+    },
+    emptyText: {
+        fontSize: 16,
+        color: '#666',
+        textAlign: 'center',
     },
     picker: {
         height: 50,
@@ -342,11 +381,6 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: "#f5f5f5",
-    },
-    headerTitle: {
-        fontSize: 20,
-        fontWeight: "bold",
-        color: "#333",
     },
     listContainer: {
         flex: 1,
@@ -387,12 +421,6 @@ const styles = StyleSheet.create({
         color: "#fff",
         fontSize: 14,
         fontWeight: "600",
-    },
-    emptyText: {
-        textAlign: "center",
-        color: "#666",
-        fontSize: 16,
-        marginTop: 20,
     },
     modalContainer: {
         backgroundColor: "#fff",

@@ -8,7 +8,7 @@ import {
     TouchableOpacity,
     Modal,
     Alert,
-    ActivityIndicator,
+    ActivityIndicator, Button,
 } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
@@ -263,6 +263,9 @@ export default function HomeScreen() {
                             <ThemedText style={styles.priceText}>Giá: {item.price.toLocaleString()} VNĐ</ThemedText>
                             <ThemedText style={styles.detailText}>Hoạt động: {item.timeInDay}h/ngày</ThemedText>
                         </ThemedView>
+
+                        {/*Quan ly service*/}
+
                         {user.roles.includes('ROLE_ADMIN') && (
                             <View style={styles.actionButtons}>
                                 <TouchableOpacity style={styles.editButton} onPress={() => handleEditPress(item)}>
@@ -274,19 +277,21 @@ export default function HomeScreen() {
                                 >
                                     <FontAwesome name="trash" size={20} color="#fff" />
                                 </TouchableOpacity>
-                                <TouchableOpacity
-                                    style={styles.bookButton}
-                                    onPress={() =>
-                                        handleBookingService(user.email || 'tester3@gmail.com', item.id, item.timeInDay)
-                                    }
-                                    disabled={loadingBookingService}
-                                >
-                                    <FontAwesome
-                                        name="calendar-check-o"
-                                        size={20}
-                                        color={loadingBookingService ? '#ccc' : '#fff'}
-                                    />
-                                </TouchableOpacity>
+                                {/*<TouchableOpacity*/}
+                                {/*    style={styles.bookButton}*/}
+                                {/*    disabled={loadingBookingService}*/}
+                                {/*>*/}
+                                {/*    <FontAwesome*/}
+                                {/*        name="calendar-check-o"*/}
+                                {/*        size={20}*/}
+                                {/*        color={loadingBookingService ? '#ccc' : '#fff'}*/}
+                                {/*    />*/}
+                                {/*</TouchableOpacity>*/}
+                                <BookingModal
+                                    idService={item.id}
+                                    handleBookingService={handleBookingService}
+                                    loadingBookingService={loadingBookingService}
+                                />
                             </View>
                         )}
                     </ThemedView>
@@ -297,6 +302,8 @@ export default function HomeScreen() {
                 }
             />
 
+
+            {/*modal them service*/}
             <Modal visible={modalVisible} transparent={true} animationType="slide">
                 <View style={styles.modalContainer}>
                     <View style={styles.modalContent}>
@@ -412,9 +419,76 @@ export default function HomeScreen() {
                     <FontAwesome name="plus" size={24} color="#fff" />
                 </TouchableOpacity>
             )}
+
         </View>
     );
 }
+
+
+const BookingModal = ({ idService, handleBookingService, loadingBookingService }) => {
+    const [visible, setVisible] = useState(false);
+    const [email, setEmail] = useState('');
+    const [value, setValue] = useState('');
+    const [loading, setLoading] = useState(false);
+
+    const openModal = () => setVisible(true);
+    const closeModal = () => setVisible(false);
+
+    const handleSubmit = async () => {
+        setLoading(true);
+        const duration = parseInt(value, 10);
+        if (!email || !idService || isNaN(duration)) {
+            Alert.alert('Lỗi', 'Vui lòng nhập đầy đủ thông tin hợp lệ!');
+            setLoading(false);
+            return;
+        }
+        await handleBookingService(email, idService, duration);
+        setLoading(false);
+        closeModal();
+    };
+
+    return (
+        <View>
+            <TouchableOpacity
+                style={styles.bookButton}
+                disabled={loadingBookingService}
+                onPress={openModal}
+            >
+                <FontAwesome
+                    name="calendar-check-o"
+                    size={20}
+                    color={loadingBookingService ? '#ccc' : '#fff'}
+                />
+            </TouchableOpacity>
+
+            <Modal visible={visible} transparent animationType="slide" onRequestClose={closeModal}>
+                <View style={styles.modalContainer}>
+                    <View style={styles.modalContent}>
+                        <Text style={styles.modalTitle}>Booking Dịch Vụ</Text>
+                        <TextInput
+                            style={styles.input}
+                            placeholder="Nhập email"
+                            value={email}
+                            onChangeText={setEmail}
+                            keyboardType="email-address"
+                        />
+                        <TextInput
+                            style={styles.input}
+                            placeholder="Nhập số lượng"
+                            value={value}
+                            onChangeText={setValue}
+                            keyboardType="numeric"
+                        />
+                        <View style={styles.buttonContainer}>
+                            <Button title="Hủy" onPress={closeModal} color="red" />
+                            <Button title={loading ? "Đang xử lý..." : "Xác nhận"} onPress={handleSubmit} disabled={loading} />
+                        </View>
+                    </View>
+                </View>
+            </Modal>
+        </View>
+    );
+};
 
 const styles = StyleSheet.create({
     container: {
@@ -424,6 +498,11 @@ const styles = StyleSheet.create({
     listContent: {
         paddingHorizontal: 16,
         paddingBottom: 80,
+    },
+    buttonContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginTop: 20,
     },
     serviceItem: {
         backgroundColor: '#fff',
