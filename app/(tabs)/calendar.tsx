@@ -210,22 +210,23 @@ const CalendarScreen: React.FC = () => {
             onPress={() => {
                 setSelectedItem(item);
                 setModalVisible(true);
-                fetchPTDetails(item.TrainerId);
+                if (item.TrainerId) {
+                    fetchPTDetails(item.TrainerId);
+                }
             }}
         >
             {item.UserEmail && <Text style={styles.emailText}>Email: {item.UserEmail}</Text>}
+
             <Text style={styles.statusText}>Check-in: {item.checkin ? "✅" : "❌"}</Text>
             <Text style={styles.statusText}>Check-out: {item.checkout ? "✅" : "❌"}</Text>
+
             <Text style={styles.statusText}>
-                PT: {ptLoading[item.TrainerId ?? ""]
-                ? "Đang tải..."
-                : item.TrainerId && ptData[item.TrainerId]?.email
-                    ? `${ptData[item.TrainerId].email} ✅`
-                    : "❌"}
+                PT: {item.TrainerId
+                ? `${item.TrainerId} ✅`
+                : "❌"}
             </Text>
         </TouchableOpacity>
     );
-
 
     const handleBookingPT = useCallback(async (idSchedule: string, idPT: string) => {
         if (!idSchedule || !idPT) {
@@ -293,22 +294,6 @@ const CalendarScreen: React.FC = () => {
                     />
                 </View>
             ) : null}
-            {/*{selectedDate && (*/}
-            {/*    <View style={styles.scheduleContainer}>*/}
-            {/*        <Text style={styles.dateText}>Ngày: {selectedDate}</Text>*/}
-            {/*        {loadingCategory ? (*/}
-            {/*            <Text style={styles.loadingText}>Đang tải...</Text>*/}
-            {/*        ) : (*/}
-            {/*            <FlatList*/}
-            {/*                data={getEventsForDate(selectedDate)}*/}
-            {/*                renderItem={renderScheduleItem}*/}
-            {/*                keyExtractor={item => item.id}*/}
-            {/*                ListEmptyComponent={<Text style={styles.emptyText}>Không có lịch hẹn</Text>}*/}
-            {/*                contentContainerStyle={styles.listContent}*/}
-            {/*            />*/}
-            {/*        )}*/}
-            {/*    </View>*/}
-            {/*)}*/}
 
             {user.roles.includes("ROLE_USER") && (
                 <Modal
