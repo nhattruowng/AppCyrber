@@ -1,15 +1,15 @@
 import {StyleSheet, TouchableOpacity, View, Text, TextInput, Dimensions, Image, Modal, Alert} from 'react-native';
 import React, {useEffect, useState} from 'react';
-import {Ionicons} from "@expo/vector-icons";
 import {setUser} from '../redux/userSlice'
 import {GoogleSignin} from '@react-native-google-signin/google-signin';
 import {useRouter} from "expo-router";
 import {useDispatch, useSelector} from "react-redux";
 import {RootState} from "@/app/redux/store";
-import {useNavigation} from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {jwtDecode} from "jwt-decode";
 import auth from '@react-native-firebase/auth';
+import messaging from '@react-native-firebase/messaging';
+import Ionicons from "@expo/vector-icons/Ionicons";
 
 GoogleSignin.configure({
     webClientId: '1062171005115-9ds8cailu4f4lgmrb9q9f6ub3je13474.apps.googleusercontent.com',
@@ -17,7 +17,6 @@ GoogleSignin.configure({
 });
 
 const API_LOCAL_URL = process.env.LOCAL_API_URL;
-
 
 
 const LoginScreen = () => {
@@ -35,6 +34,40 @@ const LoginScreen = () => {
 
     const [forgotPasswordVisible, setForgotPasswordVisible] = useState(false);
 
+
+    useEffect(() => {
+        const requestPermission = async () => {
+            try {
+                const authStatus = await messaging().requestPermission();
+                if (authStatus === messaging.AuthorizationStatus.AUTHORIZED) {
+                    const token = await messaging().getToken();
+                    console.log('FCM Token:', token);
+
+                    const response = await fetch(
+                        `https://testupoadserver-fmbxg7epg4gscxb6.canadacentral-01.azurewebsites.net/api/users/save-fcm-token/${user.id}`,
+                        {
+                            method: 'POST',
+                            headers: {
+                                'Authorization': `Bearer ${user.token}`,
+                                'Content-Type': 'application/json',
+                                'accept': '*/*',
+                            },
+                            body: JSON.stringify(token),
+                        }
+                    );
+
+                    if (!response.ok) {
+                        console.error('Lỗi khi gửi token:', response.statusText);
+                    }
+                } else {
+                    Alert.alert('Quyền bị từ chối!');
+                }
+            } catch (error) {
+                console.error('Lỗi:', error);
+            }
+        };
+        requestPermission();
+    }, [user.id, user.token]);
 
 
     useEffect(() => {
@@ -111,8 +144,7 @@ const LoginScreen = () => {
             setLoading(false);
         } catch (error) {
             console.error('Lỗi khi đăng nhập:', error);
-        }
-        finally {
+        } finally {
             setLoading(false);
         }
     };
