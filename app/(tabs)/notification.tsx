@@ -27,9 +27,11 @@ const NotificationItem: React.FC<NotificationItemProps> = ({header, content, dat
 const Notification: React.FC = () => {
     const user = useSelector((state: RootState) => state.user);
     const [notifications, setNotifications] = useState<NotificationItemProps[]>([]);
+    const [isLoading, setIsLoading] = useState(false);
 
     useEffect(() => {
         const fetchNotification = async () => {
+            setIsLoading(true);
             try {
                 const response = await fetch(`https://testupoadserver-fmbxg7epg4gscxb6.canadacentral-01.azurewebsites.net/api/notifications/${user.id}`, {
                     method: "GET",
@@ -39,27 +41,26 @@ const Notification: React.FC = () => {
                 });
                 const result = await response.json();
                 if (result.data) {
-                    setNotifications(result.data);
+                    const sortedData = result.data.sort(
+                        (a: NotificationItemProps, b: NotificationItemProps) =>
+                            new Date(b.dateTime).getTime() - new Date(a.dateTime).getTime()
+                    );
+                    setNotifications(sortedData);
                 }
             } catch (e) {
-                console.error("Lỗi khi tải thông báo:", e);
+                console.log("Lỗi khi tải thông báo:", e);
             }
         };
         fetchNotification();
-    }, []);
+        setIsLoading(false);
+    }, [user.id, user.token]);
 
-
-    const sortedNotifications = [...notifications].sort(
-        (a, b) => new Date(b.dateTime).getTime() - new Date(a.dateTime).getTime()
-    );
-
-    setNotifications(sortedNotifications);
 
     return (
         <ScrollView style={styles.notificationContainer} showsVerticalScrollIndicator={false}>
             <Text style={styles.headerTitle}>Thông báo</Text>
-            {notifications.length === 0 ? (
-                <Text style={styles.noNotificationText}>Không có thông báo nào.</Text>
+            {isLoading ? (
+                <Text style={styles.loadingText}>Đang tải thông báo...</Text>
             ) : (
                 notifications.map((notif) => <NotificationItem key={notif.id} {...notif} />)
             )}
@@ -72,6 +73,12 @@ const styles = StyleSheet.create({
         flex: 1,
         padding: 16,
         backgroundColor: "#fff",
+    },
+    loadingText: {
+        fontSize: 16,
+        color: '#666',
+        textAlign: 'center',
+        marginTop: 20,
     },
     headerTitle: {
         fontSize: 24,

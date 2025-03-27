@@ -41,8 +41,6 @@ const LoginScreen = () => {
                 const authStatus = await messaging().requestPermission();
                 if (authStatus === messaging.AuthorizationStatus.AUTHORIZED) {
                     const token = await messaging().getToken();
-                    console.log('FCM Token:', token);
-
                     const response = await fetch(
                         `https://testupoadserver-fmbxg7epg4gscxb6.canadacentral-01.azurewebsites.net/api/users/save-fcm-token/${user.id}`,
                         {
@@ -52,12 +50,12 @@ const LoginScreen = () => {
                                 'Content-Type': 'application/json',
                                 'accept': '*/*',
                             },
-                            body: JSON.stringify(token),
+                            body: JSON.stringify({token}),
                         }
                     );
 
                     if (!response.ok) {
-                       return;
+                        return;
                     }
                 } else {
                     Alert.alert('Quyền bị từ chối!');
@@ -158,7 +156,7 @@ const LoginScreen = () => {
 
             // Đăng nhập Google
             const signInResult = await GoogleSignin.signIn();
-            const idTokengg = signInResult.data?.idToken ? signInResult.data?.idToken : " ";
+            const idTokengg = signInResult.data?.idToken ? signInResult.data.idToken : " ";
 
             const googleCredential = auth.GoogleAuthProvider.credential(idTokengg);
 
@@ -178,8 +176,6 @@ const LoginScreen = () => {
             const data = await response.json();
             const decoded: any = jwtDecode(data.data.token);
             const roles = decoded.roles || [];
-
-            console.log(roles)
 
             dispatch(
                 setUser({

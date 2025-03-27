@@ -121,7 +121,6 @@ export default function ProfileScreen() {
     };
 
 
-
     /////////////////////////////// lay lich su sư dung
 
     useEffect(() => {
