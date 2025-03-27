@@ -68,12 +68,12 @@ const AddMembershipPlanScreen = () => {
                 return true;
             } else {
                 const errorText = await response.text();
-                console.error("Lỗi từ server:", errorText);
+                console.log("Lỗi từ server:", errorText);
                 Alert.alert("Lỗi", "Không thể thêm gói: " + errorText);
                 return false;
             }
         } catch (error) {
-            console.error("Lỗi khi gọi API:", error);
+            console.log("Lỗi khi gọi API:", error);
             Alert.alert("Lỗi", "Có lỗi xảy ra khi thêm gói thành viên.");
             return false;
         } finally {

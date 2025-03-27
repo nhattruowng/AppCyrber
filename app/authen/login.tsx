@@ -57,13 +57,13 @@ const LoginScreen = () => {
                     );
 
                     if (!response.ok) {
-                        console.error('Lỗi khi gửi token:', response.statusText);
+                       return;
                     }
                 } else {
                     Alert.alert('Quyền bị từ chối!');
                 }
             } catch (error) {
-                console.error('Lỗi:', error);
+
             }
         };
         requestPermission();
@@ -82,7 +82,7 @@ const LoginScreen = () => {
                     console.log("⚠️ Không tìm thấy user trong AsyncStorage");
                 }
             } catch (error) {
-                console.error("❌ Lỗi khi load user:", error);
+                console.log("❌ Lỗi khi load user:", error);
             }
         };
 
@@ -99,7 +99,7 @@ const LoginScreen = () => {
                     setEmail(userData.email); // Nếu muốn cập nhật email
                 }
             } catch (error) {
-                console.error("Lỗi khi load user data:", error);
+                console.log("Lỗi khi load user data:", error);
             }
         };
         loadUserData();
@@ -143,7 +143,7 @@ const LoginScreen = () => {
             }
             setLoading(false);
         } catch (error) {
-            console.error('Lỗi khi đăng nhập:', error);
+            console.log('Lỗi khi đăng nhập:', error);
         } finally {
             setLoading(false);
         }
@@ -197,7 +197,7 @@ const LoginScreen = () => {
                 router.push("/profile")
             }
         } catch (error) {
-            console.error("Error signing in:", error);
+            console.log("Error signing in:", error);
         }
     };
 

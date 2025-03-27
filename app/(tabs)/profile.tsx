@@ -73,6 +73,21 @@ export default function ProfileScreen() {
       router.push("/layout/analysisadmin");
     }
 
+    const handlerRemoteFcmToken = async () => {
+        try {
+            const reponts = await fetch(`https://testupoadserver-fmbxg7epg4gscxb6.canadacentral-01.azurewebsites.net/api/users/remove-fcm-token/${user.id}`,{
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+            if (!reponts.ok) {
+                console.log("Fetching token error");
+            }
+        }catch (e) {
+            console.log("fcm key erro")
+        }
+    }
 
     const logout = () => {
         Alert.alert("Xác nhận đăng xuất", "Bạn có chắc chắn muốn đăng xuất?", [
@@ -81,6 +96,7 @@ export default function ProfileScreen() {
                 text: "Đăng xuất",
                 onPress: () => {
                     dispatch(clearUser());
+                    handlerRemoteFcmToken();
                     router.push("/authen/login");
                 },
                 style: "destructive",
@@ -104,33 +120,6 @@ export default function ProfileScreen() {
         return true;
     };
 
-
-    // useEffect(() => {
-    //     const fetchDBAnaly = async () => {
-    //         try {
-    //             const response = await fetch(
-    //                 "https://testupoadserver-fmbxg7epg4gscxb6.canadacentral-01.azurewebsites.net/api/booking/analysis",
-    //                 {
-    //                     method: "GET",
-    //                     headers: {
-    //                         "Content-Type": "application/json",
-    //                         Authorization: `Bearer ${user.token}`,
-    //                     },
-    //                 }
-    //             );
-    //             if (!response.ok) throw new Error("Lỗi khi tải dữ liệu");
-    //             const result = await response.json();
-    //             const serviceData: Service[] = Object.values(result.data);
-    //             setServices(serviceData);
-    //         } catch (error) {
-    //             console.error("Lỗi khi gọi API:", error);
-    //         }
-    //     };
-    //
-    //     if (user.roles.includes("ROLE_ADMIN")) {
-    //         fetchDBAnaly();
-    //     }
-    // }, []);
 
 
     /////////////////////////////// lay lich su sư dung
@@ -186,10 +175,10 @@ export default function ProfileScreen() {
                     setHistory(mappedHistory);
                     setIsLoadinghs(false);
                 } else {
-                    console.error("Dữ liệu không hợp lệ hoặc rỗng:", result.data);
+                    console.log("Dữ liệu không hợp lệ hoặc rỗng:", result.data);
                 }
             } catch (error) {
-                console.error("Lỗi khi tải lịch sử:", error);
+                console.log("Lỗi khi tải lịch sử:", error);
             }
         };
 
@@ -275,29 +264,6 @@ export default function ProfileScreen() {
                     </TouchableOpacity>
                 </>
             )}
-
-            {/*{user.roles.includes("ROLE_ADMIN") && (*/}
-            {/*    <ScrollView style={styles.serviceList} contentContainerStyle={styles.serviceContent}>*/}
-            {/*        {services.map((service) => (*/}
-            {/*            <View key={service.id} style={styles.serviceItem}>*/}
-            {/*                <View style={styles.row}>*/}
-            {/*                    <Text style={styles.label}>Tên:</Text>*/}
-            {/*                    <Text style={styles.value}>{service.name}</Text>*/}
-            {/*                </View>*/}
-
-            {/*                <View style={styles.row}>*/}
-            {/*                    <Text style={styles.label}>Tổng tiền:</Text>*/}
-            {/*                    <Text style={styles.value}>{service.total.toLocaleString()} VND</Text>*/}
-            {/*                </View>*/}
-
-            {/*                <View style={styles.row}>*/}
-            {/*                    <Text style={styles.label}>Số người:</Text>*/}
-            {/*                    <Text style={styles.value}>{service.totalUser} người</Text>*/}
-            {/*                </View>*/}
-            {/*            </View>*/}
-            {/*        ))}*/}
-            {/*    </ScrollView>*/}
-            {/*)}*/}
 
             {user.roles.includes("ROLE_USER") && (
                 <View>

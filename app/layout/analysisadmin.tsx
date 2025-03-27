@@ -37,7 +37,7 @@ export default function ServiceAnalysisScreen() {
                 const serviceData: Service[] = Object.values(result.data);
                 setServices(serviceData);
             } catch (error) {
-                console.error("Lỗi khi gọi API:", error);
+                console.log("Lỗi khi gọi API:", error);
             } finally {
                 setIsLoading(false);
             }

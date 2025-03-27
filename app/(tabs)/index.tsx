@@ -66,7 +66,7 @@ export default function HomeScreen() {
                 const result = await response.json();
                 setPlans(result.data || []);
             } catch (error) {
-                console.error('Error fetching plans:', error);
+                console.log('Error fetching plans:', error);
                 Alert.alert('Lỗi', 'Không thể tải danh sách gói thành viên');
             } finally {
                 setLoading(false);
@@ -134,7 +134,7 @@ export default function HomeScreen() {
             setModalVisible(false);
             setCreate(false);
         } catch (error: any) {
-            console.error('Error saving plan:', error);
+            console.log('Error saving plan:', error);
             Alert.alert('Thất bại', error.message || 'Đã xảy ra lỗi khi lưu gói thành viên');
         }
     };
@@ -189,7 +189,7 @@ export default function HomeScreen() {
             setPlans(prevPlans => prevPlans.filter(plan => plan.id !== planId));
             Alert.alert('Thành công', 'Xóa gói thành viên thành công!');
         } catch (error) {
-            console.error('Lỗi khi xóa gói:', error);
+            console.log('Lỗi khi xóa gói:', error);
             Alert.alert('Lỗi', 'Đã xảy ra lỗi khi xóa gói thành viên');
         }
     };
@@ -227,7 +227,7 @@ export default function HomeScreen() {
                     Alert.alert('Thất bại', result.message || 'Không thể booking dịch vụ, vui lòng thử lại!');
                 }
             } catch (error) {
-                console.error('Lỗi khi booking dịch vụ:', error);
+                console.log('Lỗi khi booking dịch vụ:', error);
                 Alert.alert('Lỗi', 'Đã xảy ra lỗi khi booking dịch vụ!');
             } finally {
                 setLoadingBookingService(false);

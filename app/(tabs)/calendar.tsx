@@ -91,7 +91,7 @@ const CalendarScreen: React.FC = () => {
                 setScheduleList([]);
             }
         } catch (error) {
-            console.error("Fetch schedules error:", error);
+            console.log("Fetch schedules error:", error);
             setScheduleList([]);
         } finally {
             setLoadingCategory(false);
@@ -110,7 +110,7 @@ const CalendarScreen: React.FC = () => {
             setAvailablePTs(Array.isArray(result.data) ? result.data : []);
             setloadingPTlist(false);
         } catch (error) {
-            console.error("Fetch PTs error:", error);
+            console.log("Fetch PTs error:", error);
             setAvailablePTs([]);
         }
     }, [selectedDate]);
@@ -134,7 +134,7 @@ const CalendarScreen: React.FC = () => {
                 setPtData(prev => ({ ...prev, [ptid]: result.data }));
             }
         } catch (error) {
-            console.error("Fetch PT details error:", error);
+            console.log("Fetch PT details error:", error);
         } finally {
             setPtLoading(prev => ({ ...prev, [ptid]: false }));
         }
@@ -161,7 +161,7 @@ const CalendarScreen: React.FC = () => {
                 setScheduleList([]);
             }
         } catch (error) {
-            console.error("Fetch admin data error:", error);
+            console.log("Fetch admin data error:", error);
             Alert.alert("Lỗi", "Không thể tải dữ liệu admin");
         } finally {
             setLoadingCategory(false);
@@ -257,7 +257,7 @@ const CalendarScreen: React.FC = () => {
                 Alert.alert("Thất bại", result.message || "Đăng ký PT thất bại, vui lòng thử lại!");
             }
         } catch (error) {
-            console.error("Lỗi khi booking PT:", error);
+            console.log("Lỗi khi booking PT:", error);
             Alert.alert("Thất bại", "Đã xảy ra lỗi khi đăng ký PT!");
         } finally {
             setLoadingBooking(false);

@@ -46,7 +46,7 @@ export default function UserListScreen() {
       setUsers(filteredData);
       setFilteredUsers(filteredData);
     } catch (err) {
-      console.error("Error:", err);
+      console.log("Error:", err);
     } finally {
       setIsLoading(false);
     }
@@ -109,7 +109,7 @@ export default function UserListScreen() {
           )
       );
     } catch (err) {
-      console.error("Toggle error:", err);
+      console.log("Toggle error:", err);
       alert("Đã xảy ra lỗi khi thay đổi trạng thái người dùng");
     } finally {
       setIsLoading(false);

@@ -30,7 +30,7 @@ const userSlice = createSlice({
             const user = action.payload;
             Object.assign(state, user);
             AsyncStorage.setItem("user", JSON.stringify(user)).catch((err) =>
-                console.error("Lưu user thất bại:", err)
+                console.log("Lưu user thất bại:", err)
             );
         },
         clearUser: (state) => {
@@ -43,9 +43,9 @@ const userSlice = createSlice({
                         .then(() => {
                             console.log("✅ Đã cập nhật user (token = ''):", parsedUser);
                         })
-                        .catch((err) => console.error("❌ Cập nhật user thất bại:", err));
+                        .catch((err) => console.log("❌ Cập nhật user thất bại:", err));
                 }
-            }).catch((err) => console.error("❌ Lấy user thất bại:", err));
+            }).catch((err) => console.log("❌ Lấy user thất bại:", err));
         }
 
     },

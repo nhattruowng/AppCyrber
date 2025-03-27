@@ -85,7 +85,7 @@ export default function VehicleManagementScreen() {
                 setVehicles(userData);
             }
         } catch (error) {
-            console.error("Lỗi khi lấy danh sách trainers:", error);
+            console.log("Lỗi khi lấy danh sách trainers:", error);
         } finally {
             setLoading(false);
         }
@@ -103,7 +103,7 @@ export default function VehicleManagementScreen() {
             setExperienceYear(0);
             setAddModalVisible(false);
         } catch (error) {
-            console.error("Lỗi khi thêm PT:", error);
+            console.log("Lỗi khi thêm PT:", error);
         }
     };
 
@@ -125,7 +125,7 @@ export default function VehicleManagementScreen() {
                 Alert.alert("Lỗi", "Không thể cập nhật trạng thái PT.");
             }
         } catch (error) {
-            console.error("Lỗi khi cập nhật trạng thái khóa:", error);
+            console.log("Lỗi khi cập nhật trạng thái khóa:", error);
             Alert.alert("Lỗi", "Có lỗi xảy ra khi cập nhật trạng thái.");
         } finally {
             setIsProcessing(false);
