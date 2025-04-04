@@ -8,7 +8,6 @@ import {RootState} from "@/app/redux/store";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {jwtDecode} from "jwt-decode";
 import auth from '@react-native-firebase/auth';
-import messaging from '@react-native-firebase/messaging';
 import Ionicons from "@expo/vector-icons/Ionicons";
 
 GoogleSignin.configure({
@@ -35,37 +34,37 @@ const LoginScreen = () => {
     const [forgotPasswordVisible, setForgotPasswordVisible] = useState(false);
 
 
-    useEffect(() => {
-        const requestPermission = async () => {
-            try {
-                const authStatus = await messaging().requestPermission();
-                if (authStatus === messaging.AuthorizationStatus.AUTHORIZED) {
-                    const token = await messaging().getToken();
-                    const response = await fetch(
-                        `https://testupoadserver-fmbxg7epg4gscxb6.canadacentral-01.azurewebsites.net/api/users/save-fcm-token/${user.id}`,
-                        {
-                            method: 'POST',
-                            headers: {
-                                'Authorization': `Bearer ${user.token}`,
-                                'Content-Type': 'application/json',
-                                'accept': '*/*',
-                            },
-                            body: JSON.stringify({token}),
-                        }
-                    );
-
-                    if (!response.ok) {
-                        return;
-                    }
-                } else {
-                    Alert.alert('Quyền bị từ chối!');
-                }
-            } catch (error) {
-
-            }
-        };
-        requestPermission();
-    }, [user.id, user.token]);
+    // useEffect(() => {
+    //     const requestPermission = async () => {
+    //         try {
+    //             const authStatus = await messaging().requestPermission();
+    //             if (authStatus === messaging.AuthorizationStatus.AUTHORIZED) {
+    //                 const token = await messaging().getToken();
+    //                 const response = await fetch(
+    //                     `https://testupoadserver-fmbxg7epg4gscxb6.canadacentral-01.azurewebsites.net/api/users/save-fcm-token/${user.id}`,
+    //                     {
+    //                         method: 'POST',
+    //                         headers: {
+    //                             'Authorization': `Bearer ${user.token}`,
+    //                             'Content-Type': 'application/json',
+    //                             'accept': '*/*',
+    //                         },
+    //                         body: JSON.stringify({token}),
+    //                     }
+    //                 );
+    //
+    //                 if (!response.ok) {
+    //                     return;
+    //                 }
+    //             } else {
+    //                 Alert.alert('Quyền bị từ chối!');
+    //             }
+    //         } catch (error) {
+    //
+    //         }
+    //     };
+    //     requestPermission();
+    // }, [user.id, user.token]);
 
 
     useEffect(() => {

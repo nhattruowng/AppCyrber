@@ -184,9 +184,12 @@ export default function UserListScreen() {
                         onPress={() => handleToggleLock(userItem)}
                         disabled={isLoading}
                     >
-                      <Text style={styles.toggleButtonText}>
-                        {userItem.enable ? "Khóa" : "Mở khóa"}
-                      </Text>
+                      {!userItem.roles?.includes("USER_ADMIN") && (
+                          <Text style={styles.toggleButtonText}>
+                            {userItem.enable ? "Khóa" : "Mở khóa"}
+                          </Text>
+                      )}
+
                     </TouchableOpacity>
                   </View>
               ))

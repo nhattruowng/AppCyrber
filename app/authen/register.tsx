@@ -102,7 +102,7 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({navigation}) => {
             />
 
             <TouchableOpacity style={styles.loginButton} onPress={() => handleRegister()}>
-                <Text style={styles.loginText}>{loading ? "Đang sử lý" : "Tạo Tài khoản"}</Text>
+                <Text style={styles.loginText}>{loading ? "Đang xử lý" : "Tạo Tài khoản"}</Text>
             </TouchableOpacity>
 
             <View style={styles.bottomText}>

@@ -162,7 +162,6 @@ const CalendarScreen: React.FC = () => {
             }
         } catch (error) {
             console.log("Fetch admin data error:", error);
-            Alert.alert("Lỗi", "Không thể tải dữ liệu admin");
         } finally {
             setLoadingCategory(false);
         }
@@ -222,7 +221,7 @@ const CalendarScreen: React.FC = () => {
 
             <Text style={styles.statusText}>
                 PT: {item.TrainerId
-                ? `${item.TrainerId} ✅`
+                ? `✅`
                 : "❌"}
             </Text>
         </TouchableOpacity>
